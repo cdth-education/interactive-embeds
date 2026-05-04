@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Choosing the Right Statistical Method</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 30px 20px;
+      color: #eee;
+    }
+ 
+    h1 {
+      font-size: 1.8rem;
+      text-align: center;
+      margin-bottom: 8px;
+      color: #e94560;
+      letter-spacing: 1px;
+    }
+ 
+    .subtitle {
+      font-size: 0.95rem;
+      color: #aaa;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+ 
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 16px;
+      padding: 32px 36px;
+      max-width: 680px;
+      width: 100%;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      transition: all 0.3s ease;
+    }
+ 
+    .progress-bar-container {
+      width: 100%;
+      background: rgba(255,255,255,0.1);
+      border-radius: 999px;
+      height: 6px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+ 
+    .progress-bar {
+      height: 6px;
+      background: linear-gradient(90deg, #e94560, #f5a623);
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
+ 
+    .step-label {
+      font-size: 0.78rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+ 
+    .question {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #f0f0f0;
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+ 
+    .hint {
+      font-size: 0.88rem;
+      color: #aaa;
+      margin-bottom: 24px;
+      line-height: 1.5;
+      border-left: 3px solid #e94560;
+      padding-left: 12px;
+    }
+ 
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+ 
+    .option-btn {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #eee;
+      border-radius: 10px;
+      padding: 14px 20px;
+      font-size: 1rem;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s ease;
+      line-height: 1.4;
+    }
+ 
+    .option-btn:hover {
+      background: rgba(233,69,96,0.25);
+      border-color: #e94560;
+      color: #fff;
+      transform: translateX(4px);
+    }
+ 
+    .option-btn .arrow {
+      float: right;
+      opacity: 0.5;
+      transition: opacity 0.2s;
+    }
+ 
+    .option-btn:hover .arrow {
+      opacity: 1;
+    }
+ 
+    /* Result card */
+    .result-card {
+      text-align: center;
+    }
+ 
+    .result-icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+    }
+ 
+    .result-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #f5a623;
+      margin-bottom: 12px;
+    }
+ 
+    .result-description {
+      font-size: 0.95rem;
+      color: #ccc;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+ 
+    .result-use-when {
+      background: rgba(245,166,35,0.1);
+      border: 1px solid rgba(245,166,35,0.3);
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 0.88rem;
+      color: #f5a623;
+      text-align: left;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+ 
+    .result-use-when strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+ 
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+ 
+    .tag {
+      background: rgba(233,69,96,0.2);
+      border: 1px solid rgba(233,69,96,0.4);
+      color: #e94560;
+      border-radius: 999px;
+      padding: 4px 14px;
+      font-size: 0.8rem;
+    }
+ 
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+ 
+    .btn-restart {
+      background: #e94560;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 28px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+ 
+    .btn-restart:hover { background: #c73652; }
+ 
+    .btn-back {
+      background: rgba(255,255,255,0.08);
+      color: #ccc;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 10px;
+      padding: 12px 28px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+ 
+    .btn-back:hover {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+    }
+ 
+    .breadcrumb {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 20px;
+      font-size: 0.78rem;
+      color: #777;
+    }
+ 
+    .breadcrumb span {
+      background: rgba(255,255,255,0.06);
+      border-radius: 6px;
+      padding: 3px 10px;
+      color: #999;
+    }
+ 
+    .breadcrumb span:last-child {
+      color: #e94560;
+      background: rgba(233,69,96,0.12);
+    }
+ 
+    @media (max-width: 480px) {
+      .card { padding: 24px 20px; }
+      h1 { font-size: 1.4rem; }
+      .question { font-size: 1.1rem; }
+    }
+</style>
+</head>
+<body>
+ 
+<h1>📊 Statistical Method Chooser</h1>
+<p class="subtitle">Answer each question to find the right test for your data</p>
+ 
+<div class="card" id="main-card">
+<!-- Dynamically rendered -->
+</div>
+ 
+<script>
+  // ─── TREE DEFINITION ────────────────────────────────────────────────────────
+  const tree = {
+    q1: {
+      question: "What is the aim of your analysis?",
+      hint: "Think about what you want to do with your data — explore relationships, compare groups, or predict an outcome.",
+      options: [
+        { label: "🔗 Examine a relationship / association between variables", next: "q2" },
+        { label: "📊 Compare scores / means between groups", next: "q6" },
+        { label: "📈 Predict an outcome from one or more variables", next: "q14" }
+      ]
+    },
+ 
+    // ── RELATIONSHIPS ──────────────────────────────────────────────────────────
+    q2: {
+      question: "How many variables are involved?",
+      hint: "Count the variables you want to relate to each other.",
+      options: [
+        { label: "2 variables", next: "q3" },
+        { label: "3 or more variables", next: "q5" }
+      ]
+    },
+    q3: {
+      question: "What level of measurement are your variables?",
+      hint: "Interval/Ratio = continuous numeric (e.g. height, score). Ordinal = ranked categories. Nominal = unordered categories.",
+      options: [
+        { label: "Both Interval / Ratio (continuous)", next: "q4" },
+        { label: "One or both Ordinal", next: "result_spearman" },
+        { label: "One or both Nominal (categorical)", next: "result_chi" }
+      ]
+    },
+    q4: {
+      question: "Is the relationship expected to be linear, and are assumptions met?",
+      hint: "Pearson's r assumes normality and a linear relationship. If data is skewed or non-normal, use Spearman's.",
+      options: [
+        { label: "Yes — linear relationship, normality met", next: "result_pearson" },
+        { label: "No — non-linear or normality violated", next: "result_spearman" }
+      ]
+    },
+    q5: {
+      question: "What type of multi-variable relationship are you exploring?",
+      hint: "Factor analysis reduces many variables to underlying constructs. Canonical correlation relates two sets of variables.",
+      options: [
+        { label: "Relationships among many variables / scale construction", next: "result_factor" },
+        { label: "Relationship between two sets of variables", next: "result_canonical" },
+        { label: "Partial correlation (controlling for a third variable)", next: "result_partial" }
+      ]
+    },
+ 
+    // ── COMPARING GROUPS ───────────────────────────────────────────────────────
+    q6: {
+      question: "How many groups are you comparing?",
+      hint: "Select the number of distinct groups or conditions in your study.",
+      options: [
+        { label: "2 groups", next: "q7" },
+        { label: "3 or more groups", next: "q11" }
+      ]
+    },
+    q7: {
+      question: "Are the two groups independent or related (paired)?",
+      hint: "Independent = different participants in each group. Related/Paired = same participants measured twice, or matched pairs.",
+      options: [
+        { label: "Independent (between-subjects)", next: "q8" },
+        { label: "Related / Paired (within-subjects)", next: "q10" }
+      ]
+    },
+    q8: {
+      question: "What level of measurement is your outcome variable?",
+      hint: "Parametric tests require continuous (interval/ratio) data that is approximately normally distributed.",
+      options: [
+        { label: "Interval / Ratio (continuous)", next: "q9" },
+        { label: "Ordinal", next: "result_mann" },
+        { label: "Nominal / Categorical", next: "result_chi" }
+      ]
+    },
+    q9: {
+      question: "Are parametric assumptions met? (normality, homogeneity of variance)",
+      hint: "Use Levene's test for equal variances and Shapiro-Wilk for normality. Large samples (n > 30) are more robust.",
+      options: [
+        { label: "Yes — assumptions met", next: "result_indep_t" },
+        { label: "No — assumptions violated", next: "result_mann" }
+      ]
+    },
+    q10: {
+      question: "Are parametric assumptions met for your paired data?",
+      hint: "For paired data, check that the differences between pairs are approximately normally distributed.",
+      options: [
+        { label: "Yes — assumptions met", next: "result_paired_t" },
+        { label: "No — assumptions violated", next: "result_wilcoxon" }
+      ]
+    },
+    q11: {
+      question: "Are the groups independent or related (repeated measures)?",
+      hint: "Repeated measures = the same participants appear in multiple conditions.",
+      options: [
+        { label: "Independent groups (between-subjects)", next: "q12" },
+        { label: "Related / Repeated measures (within-subjects)", next: "q13" }
+      ]
+    },
+    q12: {
+      question: "Are parametric assumptions met for your independent groups?",
+      hint: "One-way ANOVA assumes normality and homogeneity of variance across groups.",
+      options: [
+        { label: "Yes — assumptions met", next: "result_oneway_anova" },
+        { label: "No — assumptions violated", next: "result_kruskal" }
+      ]
+    },
+    q13: {
+      question: "Are parametric assumptions met for your repeated measures data?",
+      hint: "Repeated measures ANOVA also requires sphericity (tested with Mauchly's test).",
+      options: [
+        { label: "Yes — assumptions met", next: "result_rm_anova" },
+        { label: "No — assumptions violated", next: "result_friedman" }
+      ]
+    },
+ 
+    // ── PREDICTION ─────────────────────────────────────────────────────────────
+    q14: {
+      question: "How many predictor variables do you have?",
+      hint: "Predictors are the independent variables you will use to forecast the outcome.",
+      options: [
+        { label: "One predictor", next: "q15" },
+        { label: "Two or more predictors", next: "q16" }
+      ]
+    },
+    q15: {
+      question: "What type of outcome (dependent) variable do you have?",
+      hint: "The type of outcome variable determines whether to use linear or logistic regression.",
+      options: [
+        { label: "Continuous (interval / ratio)", next: "result_simple_reg" },
+        { label: "Categorical / Binary (yes/no, group membership)", next: "result_logistic" }
+      ]
+    },
+    q16: {
+      question: "What type of outcome (dependent) variable do you have?",
+      hint: "Multiple regression is for continuous outcomes; logistic regression handles categorical/binary outcomes.",
+      options: [
+        { label: "Continuous (interval / ratio)", next: "q17" },
+        { label: "Categorical / Binary", next: "result_logistic" }
+      ]
+    },
+    q17: {
+      question: "Do you have a specific theoretical order for entering predictors?",
+      hint: "Hierarchical regression allows you to enter predictors in theoretically driven blocks to assess incremental variance explained.",
+      options: [
+        { label: "Yes — enter predictors in a theoretically driven order", next: "result_hierarchical" },
+        { label: "No — enter all predictors simultaneously", next: "result_multiple_reg" }
+      ]
+    },
+ 
+    // ── RESULTS ────────────────────────────────────────────────────────────────
+    result_pearson: {
+      result: true,
+      icon: "📐",
+      title: "Pearson's r (Correlation)",
+      description: "Measures the strength and direction of the linear relationship between two continuous variables.",
+      useWhen: "Use when both variables are interval/ratio level, normally distributed, and you expect a linear relationship.",
+      tags: ["Parametric", "2 Variables", "Correlation", "Continuous Data"]
+    },
+    result_spearman: {
+      result: true,
+      icon: "🔢",
+      title: "Spearman's Rank Correlation (ρ)",
+      description: "A non-parametric alternative to Pearson's r that ranks data before computing correlation.",
+      useWhen: "Use when data is ordinal, not normally distributed, or when the relationship is monotonic but not necessarily linear.",
+      tags: ["Non-Parametric", "2 Variables", "Correlation", "Ordinal/Ranked Data"]
+    },
+    result_chi: {
+      result: true,
+      icon: "🗂️",
+      title: "Chi-Square Test (χ²)",
+      description: "Tests whether there is a significant association between two categorical variables using observed vs expected frequencies.",
+      useWhen: "Use when both variables are nominal/categorical. Ensure expected cell frequencies are ≥ 5.",
+      tags: ["Non-Parametric", "Categorical Data", "Frequencies", "Association"]
+    },
+    result_factor: {
+      result: true,
+      icon: "🧩",
+      title: "Factor Analysis / PCA",
+      description: "Reduces a large number of variables to a smaller set of underlying factors or components that explain the shared variance.",
+      useWhen: "Use for scale development, data reduction, or identifying latent constructs among many inter-correlated variables.",
+      tags: ["Multivariate", "Data Reduction", "Latent Variables", "Scale Construction"]
+    },
+    result_canonical: {
+      result: true,
+      icon: "🔀",
+      title: "Canonical Correlation",
+      description: "Examines the relationship between two sets of variables simultaneously, identifying linear combinations that maximally correlate.",
+      useWhen: "Use when you have two sets of continuous variables and want to understand their multivariate relationship.",
+      tags: ["Multivariate", "Two Variable Sets", "Advanced Correlation"]
+    },
+    result_partial: {
+      result: true,
+      icon: "🎛️",
+      title: "Partial Correlation",
+      description: "Measures the relationship between two variables while statistically controlling for the effect of one or more additional variables.",
+      useWhen: "Use when you want to isolate the unique relationship between two variables after removing the influence of a confounding variable.",
+      tags: ["Parametric", "Controlling Variables", "Correlation", "3+ Variables"]
+    },
+    result_indep_t: {
+      result: true,
+      icon: "⚖️",
+      title: "Independent Samples t-Test",
+      description: "Compares the means of two independent groups to determine whether they differ significantly.",
+      useWhen: "Use when you have two separate groups, a continuous outcome variable, and parametric assumptions are met.",
+      tags: ["Parametric", "2 Groups", "Independent", "Compare Means"]
+    },
+    result_mann: {
+      result: true,
+      icon: "📉",
+      title: "Mann-Whitney U Test",
+      description: "A non-parametric test that compares the distributions of two independent groups using rank-ordered data.",
+      useWhen: "Use when you have two independent groups but data is ordinal or parametric assumptions are violated.",
+      tags: ["Non-Parametric", "2 Groups", "Independent", "Ordinal/Ranked"]
+    },
+    result_paired_t: {
+      result: true,
+      icon: "🔄",
+      title: "Paired Samples t-Test",
+      description: "Compares the means of two related measurements (e.g., pre and post) from the same participants.",
+      useWhen: "Use with repeated measures or matched pairs designs where parametric assumptions are satisfied.",
+      tags: ["Parametric", "2 Conditions", "Within-Subjects", "Compare Means"]
+    },
+    result_wilcoxon: {
+      result: true,
+      icon: "📊",
+      title: "Wilcoxon Signed-Rank Test",
+      description: "Non-parametric equivalent of the paired t-test; compares two related groups using signed ranks of differences.",
+      useWhen: "Use with related/paired data when normality of differences cannot be assumed.",
+      tags: ["Non-Parametric", "2 Conditions", "Within-Subjects", "Ordinal"]
+    },
+    result_oneway_anova: {
+      result: true,
+      icon: "📋",
+      title: "One-Way ANOVA",
+      description: "Tests whether the means of three or more independent groups differ significantly. Follow up with post-hoc tests (e.g., Tukey) to identify which groups differ.",
+      useWhen: "Use with 3+ independent groups, continuous outcome, and when parametric assumptions (normality, homogeneity of variance) are met.",
+      tags: ["Parametric", "3+ Groups", "Independent", "Compare Means"]
+    },
+    result_kruskal: {
+      result: true,
+      icon: "🏅",
+      title: "Kruskal-Wallis Test",
+      description: "Non-parametric equivalent of one-way ANOVA. Compares distributions of three or more independent groups using ranks.",
+      useWhen: "Use with 3+ independent groups when parametric assumptions are violated or data is ordinal.",
+      tags: ["Non-Parametric", "3+ Groups", "Independent", "Ordinal/Ranked"]
+    },
+    result_rm_anova: {
+      result: true,
+      icon: "🔁",
+      title: "Repeated Measures ANOVA",
+      description: "Tests mean differences across three or more related conditions or time points for the same participants. Check sphericity with Mauchly's test.",
+      useWhen: "Use with within-subjects designs (3+ conditions) when parametric assumptions including sphericity are met.",
+      tags: ["Parametric", "3+ Conditions", "Within-Subjects", "Repeated Measures"]
+    },
+    result_friedman: {
+      result: true,
+      icon: "📌",
+      title: "Friedman Test",
+      description: "Non-parametric equivalent of repeated measures ANOVA. Compares three or more related conditions using ranked data.",
+      useWhen: "Use with within-subjects designs when parametric assumptions for repeated measures ANOVA cannot be met.",
+      tags: ["Non-Parametric", "3+ Conditions", "Within-Subjects", "Ordinal/Ranked"]
+    },
+    result_simple_reg: {
+      result: true,
+      icon: "📏",
+      title: "Simple Linear Regression",
+      description: "Models the relationship between one predictor and one continuous outcome, producing a line of best fit (ŷ = a + bx).",
+      useWhen: "Use when you want to predict a continuous outcome from a single continuous predictor variable.",
+      tags: ["Parametric", "1 Predictor", "Prediction", "Continuous Outcome"]
+    },
+    result_multiple_reg: {
+      result: true,
+      icon: "📡",
+      title: "Multiple Regression",
+      description: "Extends simple regression to include two or more predictors simultaneously, estimating each predictor's unique contribution.",
+      useWhen: "Use when predicting a continuous outcome from multiple predictors entered at the same time (standard/simultaneous entry).",
+      tags: ["Parametric", "2+ Predictors", "Prediction", "Continuous Outcome"]
+    },
+    result_hierarchical: {
+      result: true,
+      icon: "🏗️",
+      title: "Hierarchical Multiple Regression",
+      description: "Predictors are entered in theoretically ordered blocks. Each block's addition is assessed for incremental R² change, allowing you to test the contribution of specific variables above and beyond others.",
+      useWhen: "Use when theory or prior research dictates the order in which predictors should be entered, and you want to assess incremental variance explained at each step.",
+      tags: ["Parametric", "2+ Predictors", "Hierarchical Entry", "Theory-Driven"]
+    },
+    result_logistic: {
+      result: true,
+      icon: "🎯",
+      title: "Logistic Regression",
+      description: "Predicts the probability of a categorical (typically binary) outcome from one or more predictor variables. Outputs odds ratios.",
+      useWhen: "Use when your outcome variable is categorical or binary (e.g., pass/fail, yes/no, group membership).",
+      tags: ["Parametric", "Categorical Outcome", "Prediction", "Binary/Multinomial"]
+    }
+  };
+ 
+  // ─── STATE ───────────────────────────────────────────────────────────────────
+  let history = [];
+  let current = "q1";
+ 
+  // ─── RENDER ──────────────────────────────────────────────────────────────────
+  function render() {
+    const node = tree[current];
+    const card = document.getElementById("main-card");
+ 
+    // Progress (approximate depth — max ~6 steps)
+    const maxSteps = 6;
+    const progress = Math.min((history.length / maxSteps) * 100, 95);
+ 
+    if (node.result) {
+      card.innerHTML = `
+<div class="progress-bar-container">
+<div class="progress-bar" style="width:100%"></div>
+</div>
+        ${buildBreadcrumb()}
+<div class="result-card">
+<div class="result-icon">${node.icon}</div>
+<div class="result-title">${node.title}</div>
+<p class="result-description">${node.description}</p>
+<div class="result-use-when">
+<strong>✅ Use When</strong>
+            ${node.useWhen}
+</div>
+<div class="tag-row">
+            ${node.tags.map(t => `<span class="tag">${t}</span>`).join("")}
+</div>
+<div class="btn-row">
+            ${history.length > 0 ? `<button class="btn-back" onclick="goBack()">← Back</button>` : ""}
+<button class="btn-restart" onclick="restart()">🔄 Start Again</button>
+</div>
+</div>
+      `;
+    } else {
+      card.innerHTML = `
+<div class="progress-bar-container">
+<div class="progress-bar" style="width:${progress}%"></div>
+</div>
+        ${buildBreadcrumb()}
+<div class="step-label">Step ${history.length + 1}</div>
+<div class="question">${node.question}</div>
+<div class="hint">${node.hint}</div>
+<div class="options">
+          ${node.options.map((opt, i) => `
+<button class="option-btn" onclick="choose('${opt.next}')">
+              ${opt.label}
+<span class="arrow">→</span>
+</button>
+          `).join("")}
+</div>
+        ${history.length > 0 ? `
+<div style="margin-top:20px">
+<button class="btn-back" onclick="goBack()">← Back</button>
+</div>
+        ` : ""}
+      `;
+    }
+  }
+ 
+  function buildBreadcrumb() {
+    if (history.length === 0) return "";
+    const labels = {
+      q1: "Aim", q2: "Variables", q3: "Measurement", q4: "Linearity",
+      q5: "Multi-variable", q6: "Groups", q7: "Group Type", q8: "Outcome Level",
+      q9: "Assumptions", q10: "Assumptions", q11: "Design", q12: "Assumptions",
+      q13: "Assumptions", q14: "Predictors", q15: "Outcome Type",
+      q16: "Outcome Type", q17: "Entry Method"
+    };
+    const crumbs = history.map(h => `<span>${labels[h] || h}</span>`);
+    crumbs.push(`<span>${labels[current] || "Result"}</span>`);
+    return `<div class="breadcrumb">${crumbs.join('<span style="color:#444">›</span>')}</div>`;
+  }
+ 
+  function choose(next) {
+    history.push(current);
+    current = next;
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+ 
+  function goBack() {
+    if (history.length === 0) return;
+    current = history.pop();
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+ 
+  function restart() {
+    history = [];
+    current = "q1";
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+ 
+  // ─── INIT ─────────────────────────────────────────────────────────────────────
+  render();
+</script>
+</body>
+</html>
