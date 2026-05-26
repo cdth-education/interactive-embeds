@@ -1,0 +1,290 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: transparent; }
+  #feed-root {
+    font-family: var(--font-mono);
+    background: #0a0e0f;
+    color: #7eb8a0;
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    border: 0.5px solid #1e3028;
+    min-height: 520px;
+    display: flex;
+    flex-direction: column;
+  }
+  #feed-header {
+    background: #0d1514;
+    border-bottom: 0.5px solid #1e3028;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .header-title { font-size: 11px; color: #3d8c6a; letter-spacing: 0.12em; text-transform: uppercase; }
+  .header-right { display: flex; align-items: center; gap: 14px; font-size: 11px; color: #3d6655; }
+  #live-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: #2ecc71;
+    display: inline-block; margin-right: 5px;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  #live-dot.paused { background: #888; animation: none; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  #clock { color: #3d8c6a; font-size: 11px; }
+  #feed-env-bar {
+    background: #0b1210;
+    border-bottom: 0.5px solid #1a2e25;
+    padding: 8px 16px;
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+  .env-metric { display: flex; flex-direction: column; gap: 2px; min-width: 90px; }
+  .env-label { font-size: 10px; color: #2e6650; letter-spacing: 0.08em; text-transform: uppercase; }
+  .env-val { font-size: 13px; font-weight: 500; }
+  .status-extreme { color: #e74c3c; }
+  .status-severe { color: #e67e22; }
+  .status-high { color: #f1c40f; }
+  .status-rising { color: #e67e22; }
+  .status-moderate { color: #2ecc71; }
+  .status-normal { color: #7eb8a0; }
+  #scroll-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    scroll-behavior: smooth;
+    min-height: 340px;
+    max-height: 400px;
+  }
+  #scroll-container::-webkit-scrollbar { width: 4px; }
+  #scroll-container::-webkit-scrollbar-track { background: #0a0e0f; }
+  #scroll-container::-webkit-scrollbar-thumb { background: #1e3028; border-radius: 2px; }
+  #feed-log { padding: 6px 0; }
+  .feed-entry {
+    padding: 7px 16px;
+    border-bottom: 0.5px solid #101a16;
+    font-size: 12px;
+    line-height: 1.55;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+  .feed-entry:hover { background: #0e1a16; }
+  .entry-ts { color: #2e6650; margin-right: 10px; font-size: 11px; }
+  .entry-zone { color: #3d8c6a; margin-right: 8px; font-size: 11px; letter-spacing: 0.06em; }
+  .entry-sensor { color: #568c74; margin-right: 6px; }
+  .entry-value { color: #7eb8a0; }
+  .entry-flag-extreme { color: #e74c3c; font-size: 11px; margin-left: 8px; }
+  .entry-flag-warn { color: #e67e22; font-size: 11px; margin-left: 8px; }
+  .entry-flag-info { color: #f1c40f; font-size: 11px; margin-left: 8px; }
+  .syndromic-entry {
+    background: #0d1a14;
+    border-left: 2px solid #1a4a30;
+    margin: 4px 8px;
+    border-radius: 3px;
+    padding: 10px 14px;
+  }
+  .syn-header { font-size: 10px; color: #2e6650; letter-spacing: 0.1em; margin-bottom: 6px; }
+  .syn-title { font-size: 12px; color: #4aaa7a; margin-bottom: 6px; letter-spacing: 0.04em; }
+  .syn-body { font-size: 11px; color: #558c6e; line-height: 1.65; margin-bottom: 8px; }
+  .syn-status { font-size: 11px; color: #3d6655; }
+  .syn-status span { color: #f1c40f; }
+  .syn-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11px; }
+  .syn-table td { padding: 4px 8px; border-bottom: 0.5px solid #1a2e25; color: #558c6e; }
+  .syn-table td:first-child { color: #3d6655; min-width: 110px; }
+  #scroll-to-bottom {
+    position: absolute; bottom: 50px; right: 20px;
+    background: #1a3028; border: 0.5px solid #2e6650;
+    color: #7eb8a0; font-size: 11px; padding: 5px 12px;
+    border-radius: 3px; cursor: pointer; display: none;
+    font-family: var(--font-mono);
+  }
+  #scroll-to-bottom:hover { background: #1e3a30; }
+  #feed-footer {
+    background: #0b1210;
+    border-top: 0.5px solid #1a2e25;
+    padding: 6px 16px;
+    font-size: 10px;
+    color: #2e6650;
+    display: flex;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .blink { animation: blink 1s step-end infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+</style>
+
+<div id="feed-root">
+  <div id="feed-header">
+    <div>
+      <span class="header-title">EPA Victoria &mdash; Environmental Surveillance Feed</span>
+      <span style="font-size:10px;color:#2e6650;margin-left:12px;">Melbourne Metropolitan Area</span>
+    </div>
+    <div class="header-right">
+      <span><span id="live-dot"></span><span id="live-label">LIVE</span></span>
+      <span id="clock"></span>
+      <span style="color:#2e6650;">NODE: MEL-GRID-04</span>
+    </div>
+  </div>
+
+  <div id="feed-env-bar">
+    <div class="env-metric">
+      <span class="env-label">Pollen</span>
+      <span class="env-val status-extreme" id="bar-pollen">EXTREME</span>
+    </div>
+    <div class="env-metric">
+      <span class="env-label">Humidity</span>
+      <span class="env-val status-rising" id="bar-humidity">RISING — 74%</span>
+    </div>
+    <div class="env-metric">
+      <span class="env-label">Thunderstorm</span>
+      <span class="env-val status-severe" id="bar-storm">SEVERE</span>
+    </div>
+    <div class="env-metric">
+      <span class="env-label">Wind Gusts</span>
+      <span class="env-val status-high" id="bar-wind">HIGH — 62km/h</span>
+    </div>
+    <div class="env-metric">
+      <span class="env-label">AQI (CBD)</span>
+      <span class="env-val status-moderate" id="bar-aqi">MODERATE — 68</span>
+    </div>
+    <div class="env-metric">
+      <span class="env-label">UV Index</span>
+      <span class="env-val status-high" id="bar-uv">HIGH — 7.2</span>
+    </div>
+  </div>
+
+  <div style="position:relative;flex:1;display:flex;flex-direction:column;">
+    <div id="scroll-container">
+      <div id="feed-log"></div>
+    </div>
+    <button id="scroll-to-bottom" onclick="scrollToBottom()">&#8595; Return to live feed</button>
+  </div>
+
+  <div id="feed-footer">
+    <span id="entry-count">0 entries logged</span>
+    <span>Sensor grid: 47 nodes active &bull; Last sync: <span id="last-sync">—</span></span>
+    <span class="blink">&#9632;</span>
+  </div>
+</div>
+
+<script>
+const zones = ['CBD','Docklands','Southbank','Richmond','St Kilda','Fitzroy','Carlton','Footscray','Brunswick','Port Melbourne','Collingwood','Prahran','South Yarra','Flemington','Toorak'];
+const sensors = ['ATMO-S','POLLN-D','WIND-V','HUMID-R','THERM-C','PRESS-B','UVX-M','AQI-N','OZONE-T','PART-F'];
+
+let entryCount = 0;
+let autoScroll = true;
+let synEntryIndex = 0;
+const synInterval = 18;
+let baseTime = new Date();
+
+function pad(n){return String(n).padStart(2,'0');}
+function ts(){
+  let d = new Date(baseTime.getTime() + entryCount * 4200);
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function pick(arr){return arr[rand(0,arr.length-1)];}
+
+const normalEntries = [
+  ()=>{let z=pick(zones),s=pick(sensors),v=rand(12,88);return `<span class="entry-ts">${ts()}</span><span class="entry-zone">[${z}]</span><span class="entry-sensor">${s}</span><span class="entry-value">reading ${v} — nominal</span>`;},
+  ()=>{let z=pick(zones),g=rand(45,78);return `<span class="entry-ts">${ts()}</span><span class="entry-zone">[${z}]</span><span class="entry-sensor">WIND-V</span><span class="entry-value">gust ${g} km/h</span><span class="entry-flag-warn"> ▲ HIGH</span>`;},
+  ()=>{let z=pick(zones),h=rand(68,88);return `<span class="entry-ts">${ts()}</span><span class="entry-zone">[${z}]</span><span class="entry-sensor">HUMID-R</span><span class="entry-value">humidity ${h}% — rising</span><span class="entry-flag-warn"> ▲ RISING</span>`;},
+  ()=>{let z=pick(zones);return `<span class="entry-ts">${ts()}</span><span class="entry-zone">[${z}]</span><span class="entry-sensor">POLLN-D</span><span class="entry-value">ryegrass pollen count EXTREME</span><span class="entry-flag-extreme"> !! ALERT</span>`;},
+  ()=>{let z=pick(zones),t=(18+Math.random()*10).toFixed(1);return `<span class="entry-ts">${ts()}</span><span class="entry-zone">[${z}]</span><span class="entry-sensor">THERM-C</span><span class="entry-value">temp ${t}°C — dropping</span>`;},
+  ()=>{let z=pick(zones),p=rand(995,1008);return `<span class="entry-ts">${ts()}</span><span class="entry-zone">[${z}]</span><span class="entry-sensor">PRESS-B</span><span class="entry-value">pressure ${p} hPa — falling</span>`;},
+  ()=>{let z=pick(zones),a=rand(55,110);let flag=a>80?'<span class="entry-flag-warn"> ▲ MODERATE</span>':'';return `<span class="entry-ts">${ts()}</span><span class="entry-zone">[${z}]</span><span class="entry-sensor">AQI-N</span><span class="entry-value">air quality index ${a}</span>${flag}`;},
+  ()=>{let z=pick(zones),u=(rand(60,85)/10).toFixed(1);return `<span class="entry-ts">${ts()}</span><span class="entry-zone">[${z}]</span><span class="entry-sensor">UVX-M</span><span class="entry-value">UV index ${u}</span>`;},
+  ()=>{let z=pick(zones);return `<span class="entry-ts">${ts()}</span><span class="entry-zone">[${z}]</span><span class="entry-sensor">STORM-T</span><span class="entry-value">thunderstorm cell detected — bearing 280° NW</span><span class="entry-flag-extreme"> !! SEVERE</span>`;},
+  ()=>{let z=pick(zones),o=rand(18,44);return `<span class="entry-ts">${ts()}</span><span class="entry-zone">[${z}]</span><span class="entry-sensor">OZONE-T</span><span class="entry-value">ozone ${o} ppb — normal range</span>`;},
+  ()=>{let z=pick(zones),pm=(rand(12,45)/10).toFixed(1);return `<span class="entry-ts">${ts()}</span><span class="entry-zone">[${z}]</span><span class="entry-sensor">PART-F</span><span class="entry-value">PM2.5 ${pm} μg/m³</span>`;},
+  ()=>`<span class="entry-ts">${ts()}</span><span style="color:#2e6650;margin-right:8px;">[SYS]</span><span class="entry-value" style="color:#3d6655;">sensor heartbeat OK — 47/47 nodes responding</span>`,
+];
+
+function synEntry(){
+  return `<div class="syndromic-entry">
+    <div class="syn-header">▸ PKT-TYPE: SYNDROMIC_SURVEILLANCE &nbsp;|&nbsp; SOURCE: DHHS-VIC &nbsp;|&nbsp; RECV: ${ts()}</div>
+    <div class="syn-title">SYNDROMIC SURVEILLANCE — POPULATION HEALTH SIGNAL</div>
+    <div class="syn-body">Small increase detected in respiratory illness hotline calls across metropolitan Melbourne. Volume trending above 7-day baseline. Pattern consistent with thunderstorm asthma precursor conditions.</div>
+    <div class="syn-status">CONSTRAINT: <span>No formal threshold yet met for public emergency declaration.</span></div>
+    <div class="syn-status" style="margin-top:4px;color:#558c6e;">NOTE: Population health interpretation subject to uncertainty. Confidence interval wide at current sample size. Continued monitoring required.</div>
+    <table class="syn-table">
+      <tr><td>Pollen count</td><td class="status-extreme">EXTREME</td></tr>
+      <tr><td>Humidity</td><td class="status-rising">RISING</td></tr>
+      <tr><td>Thunderstorm warning</td><td class="status-severe">SEVERE</td></tr>
+      <tr><td>Wind gusts</td><td class="status-high">HIGH</td></tr>
+    </table>
+  </div>`;
+}
+
+function addEntry(html, isSyn){
+  const log = document.getElementById('feed-log');
+  const div = document.createElement('div');
+  div.className = 'feed-entry';
+  div.innerHTML = html;
+  log.appendChild(div);
+  entryCount++;
+  document.getElementById('entry-count').textContent = `${entryCount} entries logged`;
+  document.getElementById('last-sync').textContent = ts();
+  if(autoScroll){
+    const sc = document.getElementById('scroll-container');
+    sc.scrollTop = sc.scrollHeight;
+  }
+}
+
+function scrollToBottom(){
+  const sc = document.getElementById('scroll-container');
+  sc.scrollTop = sc.scrollHeight;
+  autoScroll = true;
+  document.getElementById('scroll-to-bottom').style.display = 'none';
+  document.getElementById('live-dot').classList.remove('paused');
+  document.getElementById('live-label').textContent = 'LIVE';
+}
+
+document.getElementById('scroll-container').addEventListener('scroll', function(){
+  const sc = this;
+  const atBottom = sc.scrollHeight - sc.scrollTop - sc.clientHeight < 30;
+  if(atBottom){
+    autoScroll = true;
+    document.getElementById('scroll-to-bottom').style.display = 'none';
+    document.getElementById('live-dot').classList.remove('paused');
+    document.getElementById('live-label').textContent = 'LIVE';
+  } else {
+    autoScroll = false;
+    document.getElementById('scroll-to-bottom').style.display = 'block';
+    document.getElementById('live-dot').classList.add('paused');
+    document.getElementById('live-label').textContent = 'PAUSED';
+  }
+});
+
+function updateClock(){
+  const now = new Date();
+  document.getElementById('clock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())} AEDT`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+let localCount = 0;
+function tick(){
+  localCount++;
+  if(localCount % synInterval === 0){
+    addEntry(synEntry(), true);
+  } else {
+    addEntry(pick(normalEntries)(), false);
+  }
+  if(localCount % 7 === 0){
+    let h = rand(68,88);
+    document.getElementById('bar-humidity').textContent = `RISING — ${h}%`;
+    let w = rand(52,78);
+    document.getElementById('bar-wind').textContent = `HIGH — ${w}km/h`;
+    let a = rand(60,90);
+    document.getElementById('bar-aqi').textContent = `MODERATE — ${a}`;
+    let u = (rand(62,82)/10).toFixed(1);
+    document.getElementById('bar-uv').textContent = `HIGH — ${u}`;
+  }
+}
+
+for(let i=0;i<12;i++) tick();
+setInterval(tick, 1800);
+</script>
