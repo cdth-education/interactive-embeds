@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where do you set the alarm? A sepsis early-warning score and its ROC curve</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF;
+  --panel:#FFFFFF;
+  --ink:#16222E;
+  --ink-2:#556676;
+  --ink-3:#7D8D9B;
+  --rule:#D2DAE1;
+  --rule-soft:#E4EAEF;
+  --neg:#1F7A8C;
+  --neg-fill:rgba(31,122,140,.34);
+  --neg-wash:rgba(31,122,140,.12);
+  --pos:#A8326A;
+  --pos-fill:rgba(168,50,106,.34);
+  --pos-wash:rgba(168,50,106,.12);
+  --auc-wash:rgba(22,34,46,.07);
+  --focus:#1F7A8C;
+  --shadow:0 1px 0 rgba(22,34,46,.06), 0 8px 24px -18px rgba(22,34,46,.5);
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E151C; --panel:#141E28; --ink:#E4ECF2; --ink-2:#9FB1BF; --ink-3:#7A8C9A;
+    --rule:#28363F; --rule-soft:#1D2831;
+    --neg:#55B7C9; --neg-fill:rgba(85,183,201,.34); --neg-wash:rgba(85,183,201,.13);
+    --pos:#EA80B0; --pos-fill:rgba(234,128,176,.32); --pos-wash:rgba(234,128,176,.12);
+    --auc-wash:rgba(228,236,242,.07);
+    --focus:#55B7C9;
+    --shadow:0 1px 0 rgba(0,0,0,.4), 0 10px 28px -20px #000;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E151C; --panel:#141E28; --ink:#E4ECF2; --ink-2:#9FB1BF; --ink-3:#7A8C9A;
+  --rule:#28363F; --rule-soft:#1D2831;
+  --neg:#55B7C9; --neg-fill:rgba(85,183,201,.34); --neg-wash:rgba(85,183,201,.13);
+  --pos:#EA80B0; --pos-fill:rgba(234,128,176,.32); --pos-wash:rgba(234,128,176,.12);
+  --auc-wash:rgba(228,236,242,.07);
+  --focus:#55B7C9;
+  --shadow:0 1px 0 rgba(0,0,0,.4), 0 10px 28px -20px #000;
+}
+
+*{box-sizing:border-box}
+html{font-size:17.5px}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:Archivo,"Helvetica Neue",Arial,sans-serif;
+  font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;
+  line-height:1.45;
+}
+.wrap{max-width:1120px;margin:0 auto;padding:32px 20px 40px}
+
+/* ---------- opening ---------- */
+.masthead{max-width:70ch;margin-bottom:26px}
+h1{
+  font-size:clamp(1.65rem,3.4vw,2.5rem);
+  font-weight:700;
+  letter-spacing:-.022em;
+  line-height:1.08;
+  margin:0 0 .5rem;
+}
+.standfirst{
+  font-family:Newsreader,Georgia,serif;
+  font-size:clamp(1rem,1.5vw,1.14rem);
+  line-height:1.6;
+  color:var(--ink-2);
+  margin:0;
+  max-width:64ch;
+}
+.standfirst b{font-weight:500;color:var(--ink)}
+
+/* ---------- instrument ---------- */
+.instrument{
+  background:var(--panel);
+  border:1px solid var(--rule);
+  border-radius:4px;
+  box-shadow:var(--shadow);
+  padding:14px 14px 4px;
+  margin-bottom:18px;
+}
+#stage{width:100%;display:block;touch-action:none;outline:none;cursor:crosshair}
+#stage:focus-visible{box-shadow:0 0 0 2px var(--focus);border-radius:3px}
+
+.key{
+  display:flex;flex-wrap:wrap;gap:10px 22px;
+  padding:6px 4px 12px;
+  font-size:.82rem;color:var(--ink-2);
+}
+.key span{display:inline-flex;align-items:center;gap:7px}
+.sw{width:22px;height:11px;border-radius:2px;flex:none}
+.sw.solid-neg{background:var(--neg-fill);border:1px solid var(--neg)}
+.sw.solid-pos{background:var(--pos-fill);border:1px solid var(--pos)}
+.sw.hatch{background:var(--rule-soft);border:1px solid var(--ink-3);
+  background-image:repeating-linear-gradient(135deg,transparent 0 3px,var(--ink-3) 3px 4px)}
+
+/* ---------- controls ---------- */
+.controls{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(290px,1fr));
+  gap:18px 34px;
+  margin-bottom:26px;
+}
+.control{min-width:0}
+.control h2{
+  font-size:.95rem;font-weight:600;margin:0 0 2px;letter-spacing:-.005em;
+}
+.control p{margin:0 0 9px;font-size:.84rem;color:var(--ink-2);line-height:1.4;max-width:46ch}
+.ends{display:flex;justify-content:space-between;font-size:.76rem;color:var(--ink-3);margin-top:3px}
+
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;background:transparent;margin:0;height:22px;cursor:grab;
+}
+input[type=range]:active{cursor:grabbing}
+input[type=range]::-webkit-slider-runnable-track{height:3px;background:var(--rule);border-radius:2px}
+input[type=range]::-moz-range-track{height:3px;background:var(--rule);border-radius:2px}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+  background:var(--panel);border:2px solid var(--ink);margin-top:-9px;
+  box-shadow:0 1px 3px rgba(22,34,46,.25);
+}
+input[type=range]::-moz-range-thumb{
+  width:18px;height:18px;border-radius:50%;background:var(--panel);border:2px solid var(--ink);
+}
+input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px var(--focus)}
+input[type=range]:focus-visible::-moz-range-thumb{box-shadow:0 0 0 3px var(--focus)}
+
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+button.preset{
+  font-family:inherit;font-size:.8rem;font-weight:500;color:var(--ink);
+  background:transparent;border:1px solid var(--rule);border-radius:2px;
+  padding:6px 11px;cursor:pointer;
+}
+button.preset:hover{border-color:var(--ink-2);background:var(--rule-soft)}
+button.preset:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+
+/* ---------- readout ---------- */
+.readout{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  border-top:1px solid var(--ink);border-bottom:1px solid var(--rule);
+  margin-bottom:22px;
+}
+.stat{padding:14px 18px 14px 0;border-right:1px solid var(--rule-soft)}
+.stat:last-child{border-right:none}
+.stat .n{font-size:clamp(1.6rem,3.6vw,2.1rem);font-weight:600;letter-spacing:-.03em;line-height:1}
+.stat .lab{font-size:.83rem;font-weight:500;margin-top:5px}
+.stat .sub{font-size:.76rem;color:var(--ink-3);margin-top:2px;line-height:1.35}
+.stat.neg .n{color:var(--neg)}
+.stat.pos .n{color:var(--pos)}
+
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <h1>Where do you set the alarm?</h1>
+    <p class="standfirst">An early-warning model scores every patient arriving in the emergency department from 0 to 100 for their risk of sepsis. Patients who go on to develop sepsis tend to score higher — but the two groups overlap. <b>Wherever you draw the line, you miss some cases and flag some well patients.</b> The ROC curve is the record of every line you could draw.</p>
+  </header>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat pos"><div class="n" id="sSens">—</div><div class="lab">Sensitivity</div><div class="sub">true positive rate — cases the model catches</div></div>
+    <div class="stat neg"><div class="n" id="sSpec">—</div><div class="lab">Specificity</div><div class="sub">well patients correctly left alone</div></div>
+    <div class="stat neg"><div class="n" id="sFpr">—</div><div class="lab">False positive rate</div><div class="sub">1 − specificity, the ROC curve's x&nbsp;axis</div></div>
+    <div class="stat"><div class="n" id="sAuc">—</div><div class="lab">Area under the curve</div><div class="sub" id="sAucWord">&nbsp;</div></div>
+  </div>
+
+  <div class="instrument">
+    <svg id="stage" role="img" tabindex="0" aria-label="Score distributions for both patient groups with a movable alert threshold, tethered to the matching point on the ROC curve. Use the sliders below, or arrow keys, to move the threshold."></svg>
+    <div class="key">
+      <span><i class="sw solid-pos"></i>Develops sepsis — flagged</span>
+      <span><i class="sw solid-neg"></i>No sepsis — flagged</span>
+      <span><i class="sw hatch"></i>Hatched: not flagged</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="control">
+      <h2>How well the model separates the two groups</h2>
+      <p>Slide right and the sepsis group's scores pull away from everyone else's. Watch the ROC curve bow towards the top-left corner as it does.</p>
+      <input id="sep" type="range" min="0" max="4" step="0.05" value="2"
+             aria-label="Separation between the two groups, in standard deviations">
+      <div class="ends"><span>Groups sit on top of each other</span><span>Almost no overlap</span></div>
+      <div class="presets">
+        <button class="preset" data-sep="0.4">Weak model</button>
+        <button class="preset" data-sep="2">Typical model</button>
+        <button class="preset" data-sep="3.4">Excellent model</button>
+      </div>
+    </div>
+
+    <div class="control">
+      <h2>Examining the threshold</h2>
+      <p>Scores to the right of this threshold line might be classified as &ldquo;Disease&rdquo; and scores below it as &ldquo;No disease.&rdquo; The placement of this threshold affects the test&rsquo;s accuracy.</p>
+      <p>Changing the threshold leads to a specific value of sensitivity and specificity, as seen on the ROC curve on the right-hand side. Drag the marker on the chart, or the point on the curve itself, to move it.</p>
+      <input id="thr" type="range" min="2" max="98" step="0.5" value="37"
+             aria-label="Alert threshold on the risk score">
+      <div class="ends"><span>Flag nearly everyone</span><span>Flag almost no one</span></div>
+      <div class="presets">
+        <button class="preset" data-goal="sens">Catch 95% of cases</button>
+        <button class="preset" data-goal="bal">Balanced point</button>
+        <button class="preset" data-goal="spec">Keep false alarms at 5%</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- statistics ---------- */
+  function erf(x){
+    var s = x < 0 ? -1 : 1; x = Math.abs(x);
+    var a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+    var t=1/(1+p*x);
+    var y=1-((((a5*t+a4)*t+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);
+    return s*y;
+  }
+  function Phi(z){ return 0.5*(1+erf(z/Math.SQRT2)); }
+  function dens(x,mu,sd){ var z=(x-mu)/sd; return Math.exp(-0.5*z*z)/(sd*Math.sqrt(2*Math.PI)); }
+
+  /* ---------- scenario ---------- */
+  var MU0 = 28, SD = 9;
+  var XMIN = 0, XMAX = 100, YMAX = 0.050;
+  var state = { d: 2.0, t: 37 };
+  function mu1(){ return MU0 + state.d*SD; }
+  function tpr(t){ return 1 - Phi((t - mu1())/SD); }
+  function fpr(t){ return 1 - Phi((t - MU0)/SD); }
+  function auc(){ return Phi(state.d/Math.SQRT2); }
+
+  var SAMPLES = [];
+  for (var i=0;i<=260;i++) SAMPLES.push(XMIN + (XMAX-XMIN)*i/260);
+
+  /* ---------- helpers ---------- */
+  var svg = document.getElementById('stage');
+  var NS = 'http://www.w3.org/2000/svg';
+  function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+  function pct(v){ return (v*100).toFixed(v>0.9995||v<0.0005?0:1) + '%'; }
+  function esc(s){ return String(s); }
+
+  /* ---------- layout + draw ---------- */
+  var geo = null, lastW = 0;
+
+  function render(){
+    var W = Math.max(320, Math.round(svg.parentNode.clientWidth - 28));
+    var wide = W >= 820;
+
+    var gap = 48;
+    var rocBox = wide ? clamp(Math.round((W-gap)*0.34), 240, 330) : Math.min(W, 400);
+    var distW  = wide ? (W - rocBox - gap) : W;
+
+    // distribution panel
+    var dM = {l:44, r:14, t: wide?58:52, b:52};
+    var dx0 = dM.l, dx1 = distW - dM.r;
+    var dy0 = dM.t, dy1 = dM.t + (wide?250:210);
+
+    // roc panel
+    var rM = {l:46, r:14, t:34, b:46};
+    var rInner = rocBox - rM.l - rM.r;
+    var rx0, ry0;
+    if (wide){ rx0 = distW + gap + rM.l; ry0 = dM.t - 4; }
+    else { rx0 = Math.max(rM.l, (W - rocBox)/2 + rM.l); ry0 = dy1 + dM.b + 44; }
+    var ry1 = ry0 + rInner, rx1 = rx0 + rInner;
+
+    var H = wide ? Math.max(dy1 + dM.b + 16, ry1 + rM.b + 14)
+                 : ry1 + rM.b + 14;
+
+    geo = {W:W,H:H,wide:wide,dx0:dx0,dx1:dx1,dy0:dy0,dy1:dy1,rx0:rx0,rx1:rx1,ry0:ry0,ry1:ry1,rInner:rInner};
+
+    var X  = function(v){ return dx0 + (v-XMIN)/(XMAX-XMIN)*(dx1-dx0); };
+    var Xi = function(px){ return XMIN + (px-dx0)/(dx1-dx0)*(XMAX-XMIN); };
+    var Y  = function(v){ return dy1 - clamp(v/YMAX,0,1)*(dy1-dy0); };
+    var RX = function(v){ return rx0 + v*rInner; };
+    var RY = function(v){ return ry1 - v*rInner; };
+    geo.Xi = Xi; geo.RX = RX; geo.RY = RY;
+
+    var tx = X(state.t);
+    var m1 = mu1();
+
+    function curvePath(mu){
+      var p = 'M ' + X(XMIN).toFixed(1) + ' ' + dy1.toFixed(1);
+      for (var i=0;i<SAMPLES.length;i++){
+        p += ' L ' + X(SAMPLES[i]).toFixed(1) + ' ' + Y(dens(SAMPLES[i],mu,SD)).toFixed(1);
+      }
+      return p + ' L ' + X(XMAX).toFixed(1) + ' ' + dy1.toFixed(1) + ' Z';
+    }
+    function curveLine(mu){
+      var p = '';
+      for (var i=0;i<SAMPLES.length;i++){
+        p += (i?' L ':'M ') + X(SAMPLES[i]).toFixed(1) + ' ' + Y(dens(SAMPLES[i],mu,SD)).toFixed(1);
+      }
+      return p;
+    }
+
+    // ROC path (parametric in threshold, so it always matches the panel on the left)
+    var rocPts = [], k;
+    for (k=0;k<=240;k++){
+      var tt = XMIN - 30 + (XMAX - XMIN + 60)*k/240;
+      rocPts.push([fpr(tt), tpr(tt), tt]);
+    }
+    rocPts.sort(function(a,b){ return a[0]-b[0]; });
+    var rocLine = '', rocArea = 'M ' + RX(0).toFixed(1) + ' ' + RY(0).toFixed(1);
+    for (k=0;k<rocPts.length;k++){
+      var px = RX(rocPts[k][0]).toFixed(1), py = RY(rocPts[k][1]).toFixed(1);
+      rocLine += (k?' L ':'M ') + px + ' ' + py;
+      rocArea += ' L ' + px + ' ' + py;
+    }
+    rocArea += ' L ' + RX(1).toFixed(1) + ' ' + RY(0).toFixed(1) + ' Z';
+    geo.rocPts = rocPts;
+
+    var pFpr = fpr(state.t), pTpr = tpr(state.t);
+    var ptX = RX(pFpr), ptY = RY(pTpr);
+
+    var s = [];
+    s.push('<defs>');
+    s.push('<clipPath id="cLeft"><rect x="'+(dx0-2)+'" y="'+(dy0-20)+'" width="'+Math.max(0,tx-dx0+2)+'" height="'+(dy1-dy0+22)+'"/></clipPath>');
+    s.push('<clipPath id="cRight"><rect x="'+tx+'" y="'+(dy0-20)+'" width="'+Math.max(0,dx1-tx+2)+'" height="'+(dy1-dy0+22)+'"/></clipPath>');
+    s.push('<pattern id="hNeg" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">');
+    s.push('<rect width="6" height="6" fill="var(--neg-wash)"/><line x1="0" y1="0" x2="0" y2="6" stroke="var(--neg)" stroke-width="1.1" opacity=".5"/></pattern>');
+    s.push('<pattern id="hPos" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">');
+    s.push('<rect width="6" height="6" fill="var(--pos-wash)"/><line x1="0" y1="0" x2="0" y2="6" stroke="var(--pos)" stroke-width="1.1" opacity=".5"/></pattern>');
+    s.push('</defs>');
+
+    s.push('<g font-family="Archivo, Helvetica Neue, Arial, sans-serif" fill="var(--ink)">');
+
+    /* --- tether, drawn behind everything --- */
+    if (wide){
+      var topY = 16;
+      s.push('<path d="M '+tx.toFixed(1)+' '+(dy0-30)+' C '+tx.toFixed(1)+' '+topY+', '+(ptX-70).toFixed(1)+' '+topY+', '+ptX.toFixed(1)+' '+(ptY-9).toFixed(1)+'" fill="none" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="2 4" opacity=".75"/>');
+    }
+
+    /* --- distribution panel --- */
+    // baseline + axis
+    s.push('<line x1="'+dx0+'" y1="'+dy1+'" x2="'+dx1+'" y2="'+dy1+'" stroke="var(--ink)" stroke-width="1"/>');
+    for (var v=0; v<=100; v+=20){
+      var vx = X(v);
+      s.push('<line x1="'+vx.toFixed(1)+'" y1="'+dy1+'" x2="'+vx.toFixed(1)+'" y2="'+(dy1+5)+'" stroke="var(--ink-3)" stroke-width="1"/>');
+      s.push('<text x="'+vx.toFixed(1)+'" y="'+(dy1+20)+'" font-size="12.7" fill="var(--ink-3)" text-anchor="middle">'+v+'</text>');
+    }
+    s.push('<text x="'+dx0+'" y="'+(dy1+40)+'" font-size="13.2" font-weight="500" fill="var(--ink-2)">Sepsis risk score assigned by the model</text>');
+    s.push('<text x="'+(dx0-10)+'" y="'+((dy0+dy1)/2).toFixed(1)+'" font-size="12.7" fill="var(--ink-3)" text-anchor="middle" transform="rotate(-90 '+(dx0-10)+' '+((dy0+dy1)/2).toFixed(1)+')">patients at each score</text>');
+
+    // fills
+    var negPath = curvePath(MU0), posPath = curvePath(m1);
+    s.push('<path d="'+negPath+'" fill="url(#hNeg)" clip-path="url(#cLeft)"/>');
+    s.push('<path d="'+negPath+'" fill="var(--neg-fill)" clip-path="url(#cRight)"/>');
+    s.push('<path d="'+posPath+'" fill="url(#hPos)" clip-path="url(#cLeft)"/>');
+    s.push('<path d="'+posPath+'" fill="var(--pos-fill)" clip-path="url(#cRight)"/>');
+    s.push('<path d="'+curveLine(MU0)+'" fill="none" stroke="var(--neg)" stroke-width="1.7"/>');
+    s.push('<path d="'+curveLine(m1)+'" fill="none" stroke="var(--pos)" stroke-width="1.7"/>');
+
+    // group labels, nudged apart when the curves sit on top of each other
+    var peakN = X(MU0), peakP = X(m1), close = (peakP - peakN) < 92;
+    var posLab = wide ? 'Develops sepsis' : 'Sepsis', posLabW = wide ? 112 : 52;
+    var posLabX = Math.min(peakP + 8, dx1 - posLabW);
+    s.push('<text x="'+(peakN-8).toFixed(1)+'" y="'+(Y(dens(MU0,MU0,SD))-10).toFixed(1)+'" font-size="13.8" font-weight="600" fill="var(--neg)" text-anchor="end">No sepsis</text>');
+    s.push('<text x="'+posLabX.toFixed(1)+'" y="'+(Y(dens(m1,m1,SD))-(close?26:10)).toFixed(1)+'" font-size="13.8" font-weight="600" fill="var(--pos)">'+posLab+'</text>');
+
+    // threshold line + handle
+    s.push('<line x1="'+tx.toFixed(1)+'" y1="'+(dy0-26)+'" x2="'+tx.toFixed(1)+'" y2="'+(dy1+6)+'" stroke="var(--ink)" stroke-width="1.6"/>');
+    var pillW = 88, pillX = clamp(tx - pillW/2, 2, distW - pillW - 2);
+    s.push('<g class="handle"><rect x="'+pillX.toFixed(1)+'" y="'+(dy0-44)+'" width="'+pillW+'" height="22" rx="11" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>');
+    s.push('<text x="'+(pillX+pillW/2).toFixed(1)+'" y="'+(dy0-28.5)+'" font-size="13.2" font-weight="600" text-anchor="middle" fill="var(--ink)">flag ≥ '+state.t.toFixed(0)+'</text></g>');
+
+    // which side is which
+    if (tx - dx0 > 70) s.push('<text x="'+(tx-8).toFixed(1)+'" y="'+(dy1-8)+'" font-size="12.7" fill="var(--ink-3)" text-anchor="end">not flagged</text>');
+    if (dx1 - tx > 56) s.push('<text x="'+(tx+8).toFixed(1)+'" y="'+(dy1-8)+'" font-size="12.7" fill="var(--ink-3)">flagged</text>');
+
+    /* --- ROC panel --- */
+    s.push('<text x="'+rx0+'" y="'+(ry0-16)+'" font-size="14.3" font-weight="600" fill="var(--ink)">ROC curve</text>');
+    s.push('<rect x="'+rx0+'" y="'+ry0+'" width="'+rInner+'" height="'+rInner+'" fill="none" stroke="var(--rule)" stroke-width="1"/>');
+    for (var g=1;g<5;g++){
+      var gv = g/5;
+      s.push('<line x1="'+rx0+'" y1="'+RY(gv).toFixed(1)+'" x2="'+rx1+'" y2="'+RY(gv).toFixed(1)+'" stroke="var(--rule-soft)" stroke-width="1"/>');
+      s.push('<line x1="'+RX(gv).toFixed(1)+'" y1="'+ry0+'" x2="'+RX(gv).toFixed(1)+'" y2="'+ry1+'" stroke="var(--rule-soft)" stroke-width="1"/>');
+    }
+    s.push('<path d="'+rocArea+'" fill="var(--auc-wash)"/>');
+    s.push('<line x1="'+rx0+'" y1="'+ry1+'" x2="'+rx1+'" y2="'+ry0+'" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="4 4" opacity=".8"/>');
+    s.push('<path d="'+rocLine+'" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linejoin="round"/>');
+
+    // axes ticks
+    [0,0.5,1].forEach(function(v){
+      s.push('<text x="'+RX(v).toFixed(1)+'" y="'+(ry1+18)+'" font-size="12.1" fill="var(--ink-3)" text-anchor="middle">'+v.toFixed(1)+'</text>');
+      s.push('<text x="'+(rx0-8)+'" y="'+(RY(v)+4).toFixed(1)+'" font-size="12.1" fill="var(--ink-3)" text-anchor="end">'+v.toFixed(1)+'</text>');
+    });
+    s.push('<text x="'+((rx0+rx1)/2).toFixed(1)+'" y="'+(ry1+36)+'" font-size="12.7" font-weight="500" fill="var(--ink-2)" text-anchor="middle">false positive rate</text>');
+    s.push('<text x="'+(rx0-26)+'" y="'+((ry0+ry1)/2).toFixed(1)+'" font-size="12.7" font-weight="500" fill="var(--ink-2)" text-anchor="middle" transform="rotate(-90 '+(rx0-26)+' '+((ry0+ry1)/2).toFixed(1)+')">sensitivity</text>');
+
+    // the live point
+    s.push('<line x1="'+rx0+'" y1="'+ptY.toFixed(1)+'" x2="'+ptX.toFixed(1)+'" y2="'+ptY.toFixed(1)+'" stroke="var(--pos)" stroke-width="1" stroke-dasharray="3 3"/>');
+    s.push('<line x1="'+ptX.toFixed(1)+'" y1="'+ry1+'" x2="'+ptX.toFixed(1)+'" y2="'+ptY.toFixed(1)+'" stroke="var(--neg)" stroke-width="1" stroke-dasharray="3 3"/>');
+    s.push('<circle cx="'+ptX.toFixed(1)+'" cy="'+ptY.toFixed(1)+'" r="7" fill="var(--panel)" stroke="var(--ink)" stroke-width="2.4"/>');
+    s.push('<circle cx="'+ptX.toFixed(1)+'" cy="'+ptY.toFixed(1)+'" r="2.4" fill="var(--ink)"/>');
+
+    var labAbove = pTpr < 0.88, labLeft = pFpr > 0.62;
+    s.push('<text x="'+(ptX + (labLeft?-12:12)).toFixed(1)+'" y="'+(ptY + (labAbove?-13:20)).toFixed(1)+'" font-size="12.7" font-weight="600" fill="var(--ink)" text-anchor="'+(labLeft?'end':'start')+'">'+pFpr.toFixed(2)+', '+pTpr.toFixed(2)+'</text>');
+
+    // AUC readout inside the panel, low-right where the curve never goes
+    s.push('<text x="'+(rx1-6)+'" y="'+(ry1-8)+'" font-size="12.7" fill="var(--ink-3)" text-anchor="end">shaded area = AUC</text>');
+
+    s.push('</g>');
+
+    lastW = W;
+    svg.setAttribute('viewBox','0 0 '+W+' '+H);
+    svg.setAttribute('width',W);
+    svg.setAttribute('height',H);
+    svg.style.height = H + 'px';
+    svg.innerHTML = s.join('');
+  }
+
+  /* ---------- numbers below the chart ---------- */
+  function aucWord(a){
+    if (a < 0.6)  return 'no better than guessing';
+    if (a < 0.7)  return 'poor discrimination';
+    if (a < 0.8)  return 'acceptable discrimination';
+    if (a < 0.9)  return 'good discrimination';
+    if (a < 0.98) return 'excellent discrimination';
+    return 'near-perfect separation';
+  }
+  function updateText(){
+    var se = tpr(state.t), fp = fpr(state.t), sp = 1-fp, a = auc();
+    document.getElementById('sSens').textContent = pct(se);
+    document.getElementById('sSpec').textContent = pct(sp);
+    document.getElementById('sFpr').textContent  = pct(fp);
+    document.getElementById('sAuc').textContent  = a.toFixed(3);
+    document.getElementById('sAucWord').textContent = aucWord(a);
+  }
+
+  function update(){ render(); updateText(); }
+
+  /* ---------- controls ---------- */
+  var sep = document.getElementById('sep'), thr = document.getElementById('thr');
+  function syncInputs(){ sep.value = state.d; thr.value = state.t; }
+
+  sep.addEventListener('input', function(){ state.d = parseFloat(sep.value); update(); });
+  thr.addEventListener('input', function(){ state.t = parseFloat(thr.value); update(); });
+
+  document.querySelectorAll('button.preset').forEach(function(b){
+    b.addEventListener('click', function(){
+      if (b.dataset.sep) state.d = parseFloat(b.dataset.sep);
+      if (b.dataset.goal === 'sens') state.t = clamp(mu1() - 1.6449*SD, 2, 98);
+      if (b.dataset.goal === 'spec') state.t = clamp(MU0 + 1.6449*SD, 2, 98);
+      if (b.dataset.goal === 'bal')  state.t = clamp((MU0 + mu1())/2, 2, 98);
+      state.t = Math.round(state.t*2)/2;
+      syncInputs(); update();
+    });
+  });
+
+  /* ---------- dragging on the chart ---------- */
+  var mode = null;
+  function local(e){
+    var r = svg.getBoundingClientRect();
+    return { x:(e.clientX - r.left) * (geo.W / r.width), y:(e.clientY - r.top) * (geo.H / r.height) };
+  }
+  function nearestOnRoc(p){
+    var best = null, bd = Infinity;
+    for (var i=0;i<geo.rocPts.length;i++){
+      var dx = geo.RX(geo.rocPts[i][0]) - p.x, dy = geo.RY(geo.rocPts[i][1]) - p.y;
+      var d2 = dx*dx + dy*dy;
+      if (d2 < bd){ bd = d2; best = geo.rocPts[i][2]; }
+    }
+    return best;
+  }
+  function apply(p){
+    if (mode === 'dist'){
+      state.t = clamp(Math.round(geo.Xi(p.x)*2)/2, 2, 98);
+    } else {
+      state.t = clamp(Math.round(nearestOnRoc(p)*2)/2, 2, 98);
+    }
+    syncInputs(); update();
+  }
+  svg.addEventListener('pointerdown', function(e){
+    if (!geo) return;
+    var p = local(e);
+    var inRoc = p.x > geo.rx0 - 40 && p.x < geo.rx1 + 24 && p.y > geo.ry0 - 24 && p.y < geo.ry1 + 24;
+    mode = inRoc ? 'roc' : 'dist';
+    svg.setPointerCapture(e.pointerId);
+    apply(p);
+    e.preventDefault();
+  });
+  svg.addEventListener('pointermove', function(e){ if (mode) apply(local(e)); });
+  function stop(e){ if (mode){ mode = null; try{ svg.releasePointerCapture(e.pointerId); }catch(err){} } }
+  svg.addEventListener('pointerup', stop);
+  svg.addEventListener('pointercancel', stop);
+
+  svg.addEventListener('keydown', function(e){
+    var step = e.shiftKey ? 5 : 1;
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown'){ state.t = clamp(state.t-step,2,98); }
+    else if (e.key === 'ArrowRight' || e.key === 'ArrowUp'){ state.t = clamp(state.t+step,2,98); }
+    else return;
+    e.preventDefault(); syncInputs(); update();
+  });
+
+  window.addEventListener('resize', function(){ render(); });
+  if (window.ResizeObserver){
+    new ResizeObserver(function(){
+      var w = Math.max(320, Math.round(svg.parentNode.clientWidth - 28));
+      if (Math.abs(w - lastW) > 1) render();
+    }).observe(svg.parentNode);
+  }
+
+  syncInputs();
+  update();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(render);
+})();
+</script>
+</body>
+</html>
