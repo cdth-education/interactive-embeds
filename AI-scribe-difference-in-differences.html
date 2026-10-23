@@ -46,7 +46,6 @@ body {
   line-height: 1.55;
 }
 .app {
-  height: 600px;
   display: grid;
   grid-template-columns: 210px 1fr;
   background: var(--surface);
@@ -191,14 +190,6 @@ textarea {
       <p class="lede">Four quarters before go-live. Look at the direction and steepness of each line, not the gap between them.</p>
       <div><span class="key"><span class="sw" style="background:var(--early)"></span>Early adopters</span><span class="key"><span class="sw" style="background:var(--comp)"></span>Comparison</span></div>
       <svg class="chart" id="chartPre" viewBox="0 0 560 250" role="img" aria-labelledby="chartPreDesc"><desc id="chartPreDesc">Line chart of documentation time from Q1 to Q4. Early adopters decline from 18.4 to 17.9 minutes; comparison clinics decline from 16.9 to 16.5 minutes.</desc></svg>
-      <div class="controls">
-        <label><input type="checkbox" id="preFit"> Show fitted trend lines</label>
-        <label><input type="checkbox" id="preSlope"> Show slopes</label>
-      </div>
-      <div class="prompt" id="slopeBox" hidden>
-        <b>Fitted slopes (least squares, Q1 to Q4)</b>
-        <p>Early adopters: <strong>−0.16 min per quarter</strong><br>Comparison: <strong>−0.14 min per quarter</strong></p>
-      </div>
       <div class="prompt">
         <b>Think about it</b>
         <p>The groups start about 1.5 minutes apart. Does that gap threaten the parallel trends assumption? Are four quarters enough to be confident?</p>
@@ -314,15 +305,13 @@ textarea {
   }
 
   var pre = document.getElementById("chartPre"), all = document.getElementById("chartAll");
-  var preFit = document.getElementById("preFit"), preSlope = document.getElementById("preSlope");
   var showCf = document.getElementById("showCf"), showVals = document.getElementById("showVals");
 
   function drawPre() {
     draw(pre, { n: 4, min: 16, max: 19, step: 0.5, values: true, series: [
-      { name: "Early adopters", data: early.slice(0, 4), color: "var(--early)", fit: preFit.checked },
-      { name: "Comparison", data: comp.slice(0, 4), color: "var(--comp)", fit: preFit.checked, below: true }
+      { name: "Early adopters", data: early.slice(0, 4), color: "var(--early)" },
+      { name: "Comparison", data: comp.slice(0, 4), color: "var(--comp)", below: true }
     ]});
-    document.getElementById("slopeBox").hidden = !preSlope.checked;
   }
   function drawAll() {
     var s = [
@@ -332,7 +321,6 @@ textarea {
     if (showCf.checked) s.push({ name: "Counterfactual", data: cf, color: "var(--early)", dash: "5 4" });
     draw(all, { n: 6, min: 10, max: 20, step: 2, goLive: 4, values: showVals.checked, series: s });
   }
-  [preFit, preSlope].forEach(function (c) { c.addEventListener("change", drawPre); });
   [showCf, showVals].forEach(function (c) { c.addEventListener("change", drawAll); });
   drawPre(); drawAll();
 
