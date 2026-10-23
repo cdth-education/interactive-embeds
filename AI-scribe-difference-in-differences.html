@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI scribe evaluation: difference-in-differences activity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #F3F6F5;
+  --surface: #FFFFFF;
+  --ink: #17323F;
+  --muted: #566B75;
+  --line: #D3DCDE;
+  --early: #1D6FA3;
+  --comp: #A8701A;
+  --soft: #E6EEF0;
+  --focus: #1D6FA3;
+  color-scheme: light;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0F181C; --surface: #162228; --ink: #E3EBED; --muted: #9AAFB7;
+    --line: #2B3A41; --early: #5DAADF; --comp: #DDA34C; --soft: #1D2C33; --focus: #5DAADF;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0F181C; --surface: #162228; --ink: #E3EBED; --muted: #9AAFB7;
+  --line: #2B3A41; --early: #5DAADF; --comp: #DDA34C; --soft: #1D2C33; --focus: #5DAADF;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Public Sans", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+}
+.app {
+  height: 600px;
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+nav {
+  background: var(--paper);
+  border-right: 1px solid var(--line);
+  padding: 18px 0;
+  overflow-y: auto;
+}
+nav .title {
+  padding: 0 18px 14px;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.35;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 8px;
+}
+nav .title span { display: block; font-weight: 400; color: var(--muted); font-size: 13px; margin-top: 2px; }
+nav ol { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+nav button {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 18px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--muted);
+  border-left: 3px solid transparent;
+}
+nav button .n {
+  flex: 0 0 22px; height: 22px; border-radius: 50%;
+  border: 1px solid var(--line); display: grid; place-items: center;
+  font-size: 12px; font-weight: 600; background: var(--surface);
+}
+nav button:hover { color: var(--ink); }
+nav button[aria-current="true"] { color: var(--ink); font-weight: 600; border-left-color: var(--early); background: var(--surface); }
+nav button[aria-current="true"] .n { background: var(--early); border-color: var(--early); color: #fff; }
+nav button:focus-visible, button:focus-visible, textarea:focus-visible, label:focus-within {
+  outline: 2px solid var(--focus); outline-offset: 2px;
+}
+main { overflow-y: auto; padding: 26px 32px 28px; }
+section { display: none; max-width: 640px; }
+section.active { display: block; }
+h1 { font-size: 22px; line-height: 1.25; margin: 0 0 4px; font-weight: 700; letter-spacing: -0.01em; }
+.lede { color: var(--muted); margin: 0 0 18px; }
+h2 { font-size: 15px; margin: 22px 0 6px; }
+p { margin: 0 0 12px; }
+.calc {
+  border-left: 3px solid var(--early);
+  background: var(--soft);
+  padding: 12px 16px;
+  margin: 14px 0;
+  font-size: 15px;
+}
+.calc strong { font-variant-numeric: tabular-nums; }
+.table-wrap { overflow-x: auto; margin: 10px 0 16px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); }
+th { font-weight: 600; color: var(--muted); font-size: 13px; }
+td.num, th.num { text-align: right; }
+tr.post td { background: var(--soft); }
+.key { display: inline-flex; align-items: center; gap: 6px; margin-right: 16px; font-size: 13px; }
+.sw { width: 18px; height: 3px; border-radius: 2px; display: inline-block; }
+.chart { width: 100%; height: auto; display: block; margin: 6px 0 4px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 6px 0 10px; font-size: 14px; }
+.controls label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; border-radius: 3px; }
+.controls input { accent-color: var(--early); width: 16px; height: 16px; margin: 0; }
+.prompt {
+  border: 1px solid var(--line);
+  padding: 12px 16px;
+  margin: 14px 0;
+  border-radius: 4px;
+}
+.prompt p:last-child { margin-bottom: 0; }
+.prompt b { display: block; margin-bottom: 4px; }
+.memo {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  padding: 16px 18px;
+  border-radius: 4px;
+  margin: 12px 0;
+}
+.memo .from { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+ul.notes { padding-left: 20px; margin: 8px 0 12px; }
+ul.notes li { margin-bottom: 10px; }
+label.q { display: block; font-weight: 600; margin: 16px 0 6px; font-size: 14px; }
+textarea {
+  width: 100%; min-height: 70px; resize: vertical;
+  font: inherit; font-size: 14px; color: var(--ink);
+  background: var(--paper); border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px;
+}
+.btn {
+  font: inherit; font-size: 14px; font-weight: 600;
+  padding: 8px 14px; border-radius: 4px; cursor: pointer;
+  background: var(--early); color: #fff; border: 1px solid var(--early);
+}
+.btn.secondary { background: transparent; color: var(--ink); border-color: var(--line); }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
+.status { font-size: 13px; color: var(--muted); }
+.pager { display: flex; justify-content: space-between; margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--line); }
+.answers[hidden] { display: none; }
+.answers h2:first-child { margin-top: 10px; }
+.chart text { fill: var(--muted); font-family: inherit; font-size: 11px; }
+.chart .axis { stroke: var(--line); }
+.chart .grid { stroke: var(--line); stroke-dasharray: 2 3; }
+.chart .golive { stroke: var(--ink); stroke-dasharray: 4 4; opacity: .55; }
+.chart .golive-label { fill: var(--ink); font-weight: 600; }
+.chart .postband { fill: var(--soft); }
+@media (max-width: 640px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  nav { border-right: 0; border-bottom: 1px solid var(--line); padding: 8px 0; overflow-x: auto; overflow-y: hidden; }
+  nav .title { display: none; }
+  nav ol { display: flex; }
+  nav button { width: auto; white-space: nowrap; padding: 6px 12px; border-left: 0; border-bottom: 3px solid transparent; }
+  nav button[aria-current="true"] { border-bottom-color: var(--early); }
+  nav button .label { display: none; }
+  nav button[aria-current="true"] .label { display: inline; }
+  main { padding: 18px 16px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  section.active { animation: fade .18s ease-out; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav aria-label="Activity sections">
+    <div class="title">Evaluating an AI scribe<span>Difference-in-differences activity</span></div>
+    <ol id="navlist"></ol>
+  </nav>
+
+  <main id="main" tabindex="-1">
+
+    <section id="pretrends" data-label="Pre-period trends">
+      <h1>Do the pre-period trends look parallel?</h1>
+      <p class="lede">Four quarters before go-live. Look at the direction and steepness of each line, not the gap between them.</p>
+      <div><span class="key"><span class="sw" style="background:var(--early)"></span>Early adopters</span><span class="key"><span class="sw" style="background:var(--comp)"></span>Comparison</span></div>
+      <svg class="chart" id="chartPre" viewBox="0 0 560 250" role="img" aria-labelledby="chartPreDesc"><desc id="chartPreDesc">Line chart of documentation time from Q1 to Q4. Early adopters decline from 18.4 to 17.9 minutes; comparison clinics decline from 16.9 to 16.5 minutes.</desc></svg>
+      <div class="controls">
+        <label><input type="checkbox" id="preFit"> Show fitted trend lines</label>
+        <label><input type="checkbox" id="preSlope"> Show slopes</label>
+      </div>
+      <div class="prompt" id="slopeBox" hidden>
+        <b>Fitted slopes (least squares, Q1 to Q4)</b>
+        <p>Early adopters: <strong>−0.16 min per quarter</strong><br>Comparison: <strong>−0.14 min per quarter</strong></p>
+      </div>
+      <div class="prompt">
+        <b>Think about it</b>
+        <p>The groups start about 1.5 minutes apart. Does that gap threaten the parallel trends assumption? Are four quarters enough to be confident?</p>
+      </div>
+    </section>
+
+    <section id="beforeafter" data-label="Before and after">
+      <h1>Before and after go-live</h1>
+      <p class="lede">All six quarters. The dashed line shows where early adopters would be if they had followed the comparison group’s change.</p>
+      <div><span class="key"><span class="sw" style="background:var(--early)"></span>Early adopters</span><span class="key"><span class="sw" style="background:var(--comp)"></span>Comparison</span><span class="key"><span class="sw" style="background:repeating-linear-gradient(90deg,var(--early) 0 4px,transparent 4px 7px)"></span>Counterfactual</span></div>
+      <svg class="chart" id="chartAll" viewBox="0 0 560 270" role="img" aria-labelledby="chartAllDesc"><desc id="chartAllDesc">Line chart from Q1 to Q6. After go-live at Q5, early adopters drop to about 12 minutes and comparison clinics to about 13.7 minutes.</desc></svg>
+      <div class="controls">
+        <label><input type="checkbox" id="showCf" checked> Show counterfactual</label>
+        <label><input type="checkbox" id="showVals"> Show values</label>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th class="num">Early adopters</th><th class="num">Comparison</th></tr></thead>
+          <tbody>
+            <tr><td>Pre-period mean (Q1–Q4)</td><td class="num">18.15</td><td class="num">16.70</td></tr>
+            <tr><td>Post-period mean (Q5–Q6)</td><td class="num">12.15</td><td class="num">13.70</td></tr>
+            <tr><td><strong>Change</strong></td><td class="num"><strong>−6.00</strong></td><td class="num"><strong>−3.00</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="calc">Difference-in-differences = (−6.00) − (−3.00) = <strong>−3.00 minutes per consultation</strong></div>
+    </section>
+
+    <div class="pager">
+      <button class="btn secondary" id="prevBtn" type="button">Previous</button>
+      <button class="btn" id="nextBtn" type="button">Next</button>
+    </div>
+  </main>
+</div>
+
+<script>
+(function () {
+  var Q = ["Q1","Q2","Q3","Q4","Q5","Q6"];
+  var early = [18.4, 18.2, 18.1, 17.9, 12.3, 12.0];
+  var comp  = [16.9, 16.8, 16.6, 16.5, 13.8, 13.6];
+  var gap = 18.15 - 16.70;
+  var cf = [null, null, null, 17.9, +(comp[4] + gap).toFixed(2), +(comp[5] + gap).toFixed(2)];
+
+  // Data table
+  var rows = "";
+  for (var i = 0; i < 6; i++) {
+    rows += '<tr class="' + (i > 3 ? "post" : "") + '"><td>' + Q[i] + '</td><td>' + (i > 3 ? "After go-live" : "Before") +
+      '</td><td class="num">' + early[i].toFixed(1) + '</td><td class="num">' + comp[i].toFixed(1) + '</td></tr>';
+  }
+
+  // Least-squares fit
+  function fit(y) {
+    var n = y.length, mx = (n - 1) / 2, my = y.reduce(function (a, b) { return a + b; }, 0) / n, sxy = 0, sxx = 0;
+    y.forEach(function (v, i) { sxy += (i - mx) * (v - my); sxx += (i - mx) * (i - mx); });
+    var b = sxy / sxx; return { b: b, a: my - b * mx };
+  }
+
+  var NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+
+  function draw(svg, o) {
+    while (svg.lastChild && svg.lastChild.tagName !== "desc") svg.removeChild(svg.lastChild);
+    var vb = svg.viewBox.baseVal, W = vb.width, H = vb.height;
+    var L = 44, R = 20, T = 18, B = 32, pw = W - L - R, ph = H - T - B;
+    var n = o.n;
+    var x = function (i) { return L + (n === 1 ? pw / 2 : i * pw / (n - 1)); };
+    var y = function (v) { return T + (o.max - v) / (o.max - o.min) * ph; };
+    var g = el("g", {}, svg);
+
+    if (o.goLive != null) {
+      el("rect", { "class": "postband", x: x(o.goLive) - pw / (n - 1) / 2, y: T, width: W - R - (x(o.goLive) - pw / (n - 1) / 2), height: ph }, g);
+    }
+    for (var v = o.min; v <= o.max + 1e-9; v += o.step) {
+      el("line", { "class": "grid", x1: L, x2: W - R, y1: y(v), y2: y(v) }, g);
+      var t = el("text", { x: L - 8, y: y(v) + 4, "text-anchor": "end" }, g); t.textContent = +v.toFixed(1);
+    }
+    el("line", { "class": "axis", x1: L, x2: W - R, y1: T + ph, y2: T + ph }, g);
+    for (var i = 0; i < n; i++) {
+      var tx = el("text", { x: x(i), y: H - 10, "text-anchor": "middle" }, g); tx.textContent = Q[i];
+    }
+    var yl = el("text", { x: 12, y: T + ph / 2, transform: "rotate(-90 12 " + (T + ph / 2) + ")", "text-anchor": "middle" }, g);
+    yl.textContent = "Minutes";
+
+    if (o.goLive != null) {
+      var gx = x(o.goLive) - pw / (n - 1) / 2;
+      el("line", { "class": "golive", x1: gx, x2: gx, y1: T, y2: T + ph }, g);
+      var gl = el("text", { "class": "golive-label", x: gx + 6, y: T + 12 }, g); gl.textContent = "Scribe go-live";
+    }
+
+    o.series.forEach(function (s) {
+      var pts = [];
+      s.data.forEach(function (v, i) { if (v != null && i < n) pts.push([x(i), y(v), v, i]); });
+      el("polyline", { points: pts.map(function (p) { return p[0] + "," + p[1]; }).join(" "), fill: "none", stroke: s.color, "stroke-width": s.dash ? 2 : 2.5, "stroke-dasharray": s.dash || "", "stroke-linejoin": "round" }, g);
+      pts.forEach(function (p) {
+        if (s.dash && p[3] === 3) return;
+        var c = el("circle", { cx: p[0], cy: p[1], r: s.dash ? 3.5 : 4.5, fill: s.dash ? "var(--surface)" : s.color, stroke: s.color, "stroke-width": 2 }, g);
+        var tt = el("title", {}, c); tt.textContent = s.name + ", " + Q[p[3]] + ": " + p[2].toFixed(2) + " min";
+        if (o.values) {
+          var lb = el("text", { x: p[0], y: p[1] + (s.below ? 18 : -10), "text-anchor": "middle", style: "fill:" + s.color + ";font-weight:600" }, g);
+          lb.textContent = p[2].toFixed(1);
+        }
+      });
+      if (s.fit) {
+        var f = fit(s.data.slice(0, n));
+        el("line", { x1: x(0), y1: y(f.a), x2: x(n - 1), y2: y(f.a + f.b * (n - 1)), stroke: s.color, "stroke-width": 1.5, "stroke-dasharray": "6 4", opacity: .8 }, g);
+      }
+    });
+  }
+
+  var pre = document.getElementById("chartPre"), all = document.getElementById("chartAll");
+  var preFit = document.getElementById("preFit"), preSlope = document.getElementById("preSlope");
+  var showCf = document.getElementById("showCf"), showVals = document.getElementById("showVals");
+
+  function drawPre() {
+    draw(pre, { n: 4, min: 16, max: 19, step: 0.5, values: true, series: [
+      { name: "Early adopters", data: early.slice(0, 4), color: "var(--early)", fit: preFit.checked },
+      { name: "Comparison", data: comp.slice(0, 4), color: "var(--comp)", fit: preFit.checked, below: true }
+    ]});
+    document.getElementById("slopeBox").hidden = !preSlope.checked;
+  }
+  function drawAll() {
+    var s = [
+      { name: "Early adopters", data: early, color: "var(--early)" },
+      { name: "Comparison", data: comp, color: "var(--comp)", below: true }
+    ];
+    if (showCf.checked) s.push({ name: "Counterfactual", data: cf, color: "var(--early)", dash: "5 4" });
+    draw(all, { n: 6, min: 10, max: 20, step: 2, goLive: 4, values: showVals.checked, series: s });
+  }
+  [preFit, preSlope].forEach(function (c) { c.addEventListener("change", drawPre); });
+  [showCf, showVals].forEach(function (c) { c.addEventListener("change", drawAll); });
+  drawPre(); drawAll();
+
+  // Navigation
+  var sections = Array.prototype.slice.call(document.querySelectorAll("section"));
+  var navlist = document.getElementById("navlist"), main = document.getElementById("main");
+  var buttons = sections.map(function (s, i) {
+    var li = document.createElement("li");
+    var b = document.createElement("button");
+    b.type = "button";
+    b.innerHTML = '<span class="n">' + (i + 1) + '</span><span class="label">' + s.dataset.label + '</span>';
+    b.setAttribute("aria-label", (i + 1) + ". " + s.dataset.label);
+    b.addEventListener("click", function () { go(i, true); });
+    li.appendChild(b); navlist.appendChild(li);
+    return b;
+  });
+  var current = 0;
+  var prevBtn = document.getElementById("prevBtn"), nextBtn = document.getElementById("nextBtn");
+  function go(i, focus) {
+    current = Math.max(0, Math.min(sections.length - 1, i));
+    sections.forEach(function (s, k) { s.classList.toggle("active", k === current); });
+    buttons.forEach(function (b, k) { b.setAttribute("aria-current", k === current ? "true" : "false"); });
+    prevBtn.style.visibility = current === 0 ? "hidden" : "visible";
+    nextBtn.style.visibility = current === sections.length - 1 ? "hidden" : "visible";
+    main.scrollTop = 0;
+    if (focus) main.focus({ preventScroll: true });
+    buttons[current].scrollIntoView({ block: "nearest", inline: "nearest" });
+  }
+  prevBtn.addEventListener("click", function () { go(current - 1, true); });
+  nextBtn.addEventListener("click", function () { go(current + 1, true); });
+  var start = sections.findIndex(function (s) { return "#" + s.id === location.hash; });
+  go(start < 0 ? 0 : start, false);
+
+})();
+</script>
+</body>
+</html>
