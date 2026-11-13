@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Learning Utility Stack</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css">
 <style>
 :root{
@@ -18,6 +18,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{overflow-x:hidden}
 body{font-family:"Lato",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:16px;background:#f6f8f9;color:var(--ink);line-height:1.45}
+h2,h3,b{font-weight:400}
 .wrap{max-width:1360px;margin:0 auto;padding:20px}
 
 .grid{display:grid;gap:8px;grid-template-columns:minmax(150px,230px) repeat(4,minmax(0,1fr))}
@@ -26,22 +27,19 @@ body{font-family:"Lato",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-ser
 /* Caption strip (step text + navigation) */
 .caption{grid-column:1/-1;background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 20px;display:flex;align-items:center;gap:24px}
 .cap-text{flex:1;min-width:0}
-.cap-step{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.cap-text h2{font-size:23px;font-weight:900;margin:2px 0 4px}
+.cap-step{font-size:14px;color:var(--muted)}
+.cap-text h2{font-size:25px;margin:2px 0 4px}
 .cap-text p{font-size:16.5px;color:#33444d;max-width:900px}
-.cap-takes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.take{background:#f6f8f9;border:1px solid var(--line);border-left:4px solid var(--l1);border-radius:8px;padding:12px 14px;font-size:15.5px}
-.take b{display:block;font-size:17px;font-weight:900;margin-bottom:3px}
 .nav{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap}
 .btn{font:inherit;font-size:15px;padding:10px 16px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--ink)}
 .btn:hover:not(:disabled){border-color:var(--ink)}
-.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
+.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
 .btn:disabled{opacity:.35;cursor:not-allowed}
 
 /* Headers */
-.corner{display:flex;flex-direction:column;justify-content:flex-end;padding:0 4px 10px;border-bottom:2px solid var(--line);font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.corner{display:flex;flex-direction:column;justify-content:flex-end;padding:0 4px 10px;border-bottom:2px solid var(--line);font-size:15px;color:var(--muted)}
 .colhead{display:flex;flex-direction:column;justify-content:flex-end;padding:6px 6px 10px;border-bottom:2px solid var(--line);text-align:center;min-width:0}
-.colhead .name{font-size:21px;font-weight:900}
+.colhead .name{font-size:22px}
 .colhead .intro{font-size:14px;color:var(--muted);margin-top:3px}
 .colhead.locked .name{color:#b8c3c8}
 .colhead.active{border-bottom-color:var(--ink)}
@@ -51,13 +49,13 @@ body{font-family:"Lato",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-ser
 
 /* Row heads */
 .rowhead{padding:16px;border-radius:8px;display:flex;flex-direction:column;gap:6px;align-items:flex-start;justify-content:center;min-height:120px;min-width:0}
-.rowhead h3{font-size:18.5px;font-weight:900;line-height:1.25}
+.rowhead h3{font-size:19px;line-height:1.25}
 .rowhead p{font-size:15px;color:var(--muted)}
 .rowhead.l3{background:var(--l3)}
 .rowhead.l2{background:var(--l2)}
 .rowhead.l1{background:var(--l1);color:#fff}
 .rowhead.l1 p{color:rgba(255,255,255,.9)}
-.badge{display:inline-block;font-size:13px;font-weight:900;letter-spacing:.04em;padding:4px 10px;border-radius:6px;color:#fff;margin-top:2px}
+.badge{display:inline-block;font-size:14px;padding:4px 10px;border-radius:6px;color:#fff;margin-top:2px}
 .badge.absent{background:var(--absent)}
 .badge.gap{background:var(--gap)}
 .badge.built{background:#fff;color:var(--built)}
@@ -67,8 +65,8 @@ body{font-family:"Lato",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-ser
 .layercard.l3{background:var(--l3)}
 .layercard.l2{background:var(--l2);border-color:var(--l2-b)}
 .layercard.l1{background:var(--l1);border:1.5px solid var(--l1-b);color:#fff}
-.lc-k{display:block;font-size:13px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
-.layercard.l1 .lc-k{color:rgba(255,255,255,.78)}
+.lc-k{display:block;font-size:15px;color:var(--muted);margin-bottom:4px}
+.layercard.l1 .lc-k{color:rgba(255,255,255,.8)}
 .layercard p{font-size:16.5px}
 .note{border-radius:8px;border:1.5px dashed var(--l3-b);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--muted);font-style:italic;padding:16px;text-align:center}
 .note.l2{border-color:var(--l2-b);background:rgba(211,238,237,.35)}
@@ -81,8 +79,8 @@ body{font-family:"Lato",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-ser
 .cell.l2{background:var(--l2);border-color:var(--l2-b)}
 .cell.l1{background:var(--l1);border:1.5px solid var(--l1-b)}
 .cell.empty{opacity:.35}
-.cell.collapsed{min-height:60px;transition:min-height .3s}
-.dimlabel{display:none;font-size:12px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.cell.collapsed{min-height:60px}
+.dimlabel{display:none;font-size:14px;color:var(--muted)}
 .cell.l1 .dimlabel{color:rgba(255,255,255,.8)}
 .pchip{font-size:15px;padding:7px 10px;border-radius:6px;background:#fff;border:1px solid var(--line);cursor:help;outline:none;overflow-wrap:anywhere}
 .pchip:focus-visible{box-shadow:0 0 0 2px #4c8bf5}
@@ -91,10 +89,9 @@ body{font-family:"Lato",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-ser
 /* Translator band */
 .band{background:var(--gold);border:1.5px solid var(--gold-b);border-radius:8px;padding:12px 10px;display:flex;flex-direction:column;justify-content:space-around;gap:8px;min-width:0}
 .band.locked{background:#f8f2e0;border-style:dashed;align-items:center;justify-content:center;text-align:center;font-size:15px;color:var(--gold-ink);font-style:italic;padding:16px}
-.bandtitle{display:none;font-size:18px;font-weight:900;color:var(--gold-ink);font-style:normal}
-.bandnote{font-size:14px;font-style:italic;color:var(--gold-ink);text-align:center}
+.bandtitle{display:none;font-size:19px;color:var(--gold-ink);font-style:normal}
 .tcard{background:#fff8e4;border:1px solid var(--gold-b);border-radius:8px;padding:12px;color:var(--gold-ink)}
-.tcard b{display:block;font-size:16px;font-weight:900;text-align:center;margin-bottom:4px}
+.tcard b{display:block;font-size:17px;text-align:center;margin-bottom:4px}
 .tcard span{display:block;font-size:13.5px;line-height:1.4}
 .tarrow{text-align:center;color:var(--gold-b);font-size:22px;line-height:1}
 
@@ -109,15 +106,15 @@ body{font-family:"Lato",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-ser
 /* Medium screens: tighten type */
 @media (max-width:1180px){
   .wrap{padding:14px}
-  .colhead .name{font-size:18px}
+  .colhead .name{font-size:19px}
   .colhead .intro{font-size:13px}
   .rowhead{padding:12px}
-  .rowhead h3{font-size:16.5px}
+  .rowhead h3{font-size:17px}
   .rowhead p{font-size:14px}
   .pchip{font-size:14px;padding:6px 8px}
-  .tcard b{font-size:15px}
+  .tcard b{font-size:15.5px}
   .tcard span{font-size:13px}
-  .cap-text h2{font-size:21px}
+  .cap-text h2{font-size:22px}
   .cap-text p{font-size:16px}
 }
 
@@ -132,13 +129,12 @@ body{font-family:"Lato",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-ser
   .rowhead{min-height:0;margin-top:8px}
   .layercard{grid-template-columns:1fr;gap:12px}
   .caption{flex-direction:column;align-items:stretch;gap:14px}
-  .cap-takes{grid-template-columns:1fr}
   .band{margin-top:8px}
 }
 @media (max-width:540px){
   .grid,.grid.withband{grid-template-columns:1fr}
   .wrap{padding:10px}
-  .cap-text h2{font-size:20px}
+  .cap-text h2{font-size:21px}
   .layercard p{font-size:15.5px}
   .btn{flex:1}
 }
@@ -150,21 +146,21 @@ body{font-family:"Lato",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-ser
 
 <script>
 const LAYERS = {
-  3:{n:3, cls:'l3', title:'Layer 3: Enabling Environment', desc:'What makes it sustainable — governance, trust, alignment',
-     badge:'ABSENT', bcls:'absent',
-     body:'The rules, incentives and agreements that let the whole system persist across organisations and over time — so learning isn\'t lost when a project ends.',
+  3:{n:3, cls:'l3', title:'Layer 3: Enabling Environment', desc:'What makes it sustainable: governance, trust, alignment',
+     badge:'Absent', bcls:'absent',
+     body:'The rules, incentives and agreements that let the whole system persist across organisations and over time, so learning isn\'t lost when a project ends.',
      status:'Largely absent. Few health systems have the shared frameworks, incentives or agreements this layer needs.',
-     note:'Top of the stack — completes it'},
-  2:{n:2, cls:'l2', title:'Layer 2: Machinery', desc:'What makes it learn — feedback loops, monitoring, maintenance',
-     badge:'GAP', bcls:'gap',
+     note:'Top of the stack: completes it'},
+  2:{n:2, cls:'l2', title:'Layer 2: Machinery', desc:'What makes it learn: feedback loops, monitoring, maintenance',
+     badge:'Gap', bcls:'gap',
      body:'The processes that turn infrastructure into a system that learns: capturing decisions, tracking outcomes, watching for drift and keeping tools maintained.',
      status:'A documented gap. This work is rarely funded, staffed or measured.',
      note:'Sits on the foundation'},
-  1:{n:1, cls:'l1', title:'Layer 1: Foundation', desc:'What you build — data, compute, AI tools',
-     badge:'BUILT — but project-by-project', bcls:'built',
+  1:{n:1, cls:'l1', title:'Layer 1: Foundation', desc:'What you build: data, compute, AI tools',
+     badge:'Built, but project-by-project', bcls:'built',
      body:'The tangible infrastructure: data assets, computing power, technical standards and AI tools, plus the technical people who build them.',
-     status:'Built — but one project at a time, rather than as shared infrastructure.',
-     note:'The base — everything else sits on top'}
+     status:'Built, but one project at a time rather than as shared infrastructure.',
+     note:'The base: everything else sits on top'}
 };
 
 const COLS = [
@@ -184,7 +180,7 @@ const COLS = [
    items:[
     {t:'Interoperability mandates', l:3, tip:'Requirements that systems must exchange data in standard, compatible ways.'},
     {t:'Platform standards', l:3, tip:'Agreed specifications that platforms across the sector must meet.'},
-    {t:'Procurement lifecycle', l:3, tip:'Purchasing rules that cover a tool\'s whole life — not just the point of sale.'},
+    {t:'Procurement lifecycle', l:3, tip:'Purchasing rules that cover a tool\'s whole life, not just the point of sale.'},
     {t:'Monitoring systems', l:2, tip:'Tools that watch how systems and AI models perform in live use.'},
     {t:'Drift detection', l:2, tip:'Spotting when a model\'s performance shifts as data, practice or patient populations change.'},
     {t:'Lifecycle maintenance', l:2, tip:'Ongoing updating, retraining and eventual retirement of tools.'},
@@ -199,12 +195,12 @@ const COLS = [
     {t:'Accountability officers', l:3, tip:'Roles that answer for outcomes when systems cause harm or fall short.'},
     {t:'Maintenance engineers', l:2, tip:'Keep deployed systems running, patched and up to date after go-live.'},
     {t:'Monitoring specialists', l:2, tip:'Watch live performance, safety signals and drift, and raise the alarm when needed.'},
-    {t:'QA leads', l:2, tip:'Own quality assurance — testing and checking that systems keep meeting standards.'},
+    {t:'QA leads', l:2, tip:'Own quality assurance: testing and checking that systems keep meeting standards.'},
     {t:'Data engineers', l:1, tip:'Build the pipelines that collect, clean and move data.'},
     {t:'System admins', l:1, tip:'Run and secure the servers, networks and platforms.'},
     {t:'ML engineers', l:1, tip:'Build, train and deploy machine-learning models.'}
    ]},
-  {name:'Governance', intro:'The rules — from data access to shared commitments',
+  {name:'Governance', intro:'The rules, from data access to shared commitments',
    items:[
     {t:'Trust frameworks', l:3, tip:'Shared rules that let patients, clinicians and organisations trust how data and AI are used.'},
     {t:'Incentive alignment', l:3, tip:'Making sure funding, payment and reward structures encourage ongoing learning rather than one-off projects.'},
@@ -228,14 +224,14 @@ const TRANS = [
 const CAPTIONS = [
   {k:'Introduction', h:'How to read this table',
    p:'Rows are three layers of infrastructure, stacked from the bottom up. Columns are four dimensions that cut across every layer. Darker shading means more investment. We\'ll build it one layer at a time.', next:'Start with Layer 1'},
-  {k:'Building the stack · 1 of 3', h:'Layer 1: Foundation', p:'We start at the bottom — the layer that most investment has gone into.', next:'Add Layer 2'},
+  {k:'Building the stack · 1 of 3', h:'Layer 1: Foundation', p:'We start at the bottom, with the layer that most investment has gone into.', next:'Add Layer 2'},
   {k:'Building the stack · 2 of 3', h:'Layer 2: Machinery', p:'Sits on the foundation, and turns built infrastructure into a system that actually learns.', next:'Add Layer 3'},
   {k:'Building the stack · 3 of 3', h:'Layer 3: Enabling Environment', p:'Completes the stack. Notice the pattern moving upwards: built, then a gap, then largely absent.', next:'Add the dimensions'},
-  {k:'Dimension 1 of 4', h:'Data', p:'Each layer plays out across four dimensions. Hover over or tap any item for a plain-language explanation.', next:'Add Technology'},
+  {k:'Dimension 1 of 4', h:'Data', p:'Each layer plays out across four dimensions. <strong>Hover over any item</strong> for a plain-language explanation.', next:'Add Technology'},
   {k:'Dimension 2 of 4', h:'Technology', p:'The same layered pattern appears in the platforms and tools.', next:'Add Workforce'},
-  {k:'Dimension 3 of 4', h:'Workforce', p:'Who does the work at each layer — and who\'s missing.', next:'Add Governance'},
+  {k:'Dimension 3 of 4', h:'Workforce', p:'Who does the work at each layer, and who\'s missing.', next:'Add Governance'},
   {k:'Dimension 4 of 4', h:'Governance', p:'The rules at each layer, from controlling access to committing to learn together.', next:'Add the translators'},
-  {k:'Across the layers', h:'Translators', p:'Some roles don\'t sit in a single layer. They bridge clinical, research, technical, operational and governance worlds — connecting what gets built to what keeps it learning and what makes it last.', next:null}
+  {k:'Across the layers', h:'Translators', p:'Some roles don\'t sit in a single layer. They bridge clinical, research, technical, operational and governance worlds, connecting what gets built to what keeps it learning and what makes it last.', next:null}
 ];
 const LAST = 8;
 let step = 0, prevStep = null;
@@ -250,6 +246,7 @@ function render(){
   const revealed = dimsMode ? Math.min(4, step-3) : 0;
   const showHeaders = overview || dimsMode;
   const showBand = overview || step===8;
+  const collapsed = step===8;
   const fwd = prevStep!==null && step>prevStep;
   const newLayer = fwd && step>=1 && step<=3 ? step : null;
   const newDim = fwd && step>=4 && step<=7 ? step-4 : null;
@@ -258,9 +255,8 @@ function render(){
   grid.classList.toggle('withband', showBand);
 
   const c = CAPTIONS[step];
-  const takes = c.takes ? `<div class="cap-takes ${bandArrives?'new':''}">${c.takes.map(t=>`<div class="take"><b>${t.b}</b>${t.t}</div>`).join('')}</div>` : '';
   let h = `<div class="caption" style="grid-row:1">
-    <div class="cap-text"><div class="cap-step">${c.k}</div><h2>${c.h}</h2><p>${c.p}</p>${takes}</div>
+    <div class="cap-text"><div class="cap-step">${c.k}</div><h2>${c.h}</h2><p>${c.p}</p></div>
     <div class="nav">
       <button class="btn" data-action="back" ${step===0?'disabled':''}>← Back</button>
       ${c.next ? `<button class="btn primary" data-action="next">${c.next} →</button>` : `<button class="btn primary" data-action="restart">↺ Start again</button>`}
@@ -268,12 +264,12 @@ function render(){
 
   let row = 2;
   if(showHeaders){
-    h += `<div class="corner" style="grid-row:${row};grid-column:1">Layers</div>`;
+    h += `<div class="corner" style="grid-row:${row};grid-column:1"></div>`;
     COLS.forEach((col,ci)=>{
       const on = dimsMode && ci<revealed;
       const cur = dimsMode && ci===revealed-1 && step<=7;
       h += `<div class="colhead ${on||overview?'':'locked'} ${cur?'active':''} ${ci===newDim?'new':''}" style="grid-row:${row};grid-column:${ci+2}">
-        <span class="name">${col.name}</span>${on && step!==8?`<span class="intro">${col.intro}</span>`:''}</div>`;
+        <span class="name">${col.name}</span>${on && !collapsed?`<span class="intro">${col.intro}</span>`:''}</div>`;
     });
     if(showBand) h += `<div class="colhead trans ${overview?'locked':'active'} ${bandArrives?'new':''}" style="grid-row:${row};grid-column:6"><span class="name">Translators</span>${overview?'':'<span class="intro">Roles that bridge the layers</span>'}</div>`;
     row++;
@@ -293,7 +289,6 @@ function render(){
     } else {
       COLS.forEach((col,ci)=>{
         const filled = ci<revealed;
-        const collapsed = step===8;
         const items = filled ? `<span class="dimlabel">${col.name}</span>` + (collapsed ? '' : col.items.filter(it=>it.l===n).map(it=>`<span class="pchip" tabindex="0" data-tip="${esc(it.tip)}">${it.t}</span>`).join('')) : '';
         h += `<div class="cell ${L.cls} ${filled?'':'empty'} ${collapsed?'collapsed':''} ${ci===newDim?'new':''}" style="grid-row:${row};grid-column:${ci+2}">${items}</div>`;
       });
