@@ -26,13 +26,13 @@
 }
 *,*::before,*::after{box-sizing:inherit}
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;height:100%;background:var(--bg);color:var(--text);
+body{margin:0;background:var(--bg);color:var(--text);
   font-family:"Fira Sans","Helvetica Neue",Arial,sans-serif;}
-.app{height:100%;display:flex;flex-direction:column;align-items:center;padding:14px 16px;gap:10px}
+.app{display:flex;flex-direction:column;align-items:center;padding:8px 8px 12px;gap:10px}
 .top{width:100%;max-width:1600px;display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
 .top h1{font-size:1.15rem;font-weight:600;margin:0}
 .top p{margin:0;color:var(--muted);font-size:.9rem}
-.viewport{width:100%;flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+.viewport{width:100%;display:flex;justify-content:center}
 .frameWrap{position:relative;border-radius:10px;overflow:hidden;box-shadow:0 10px 40px rgba(0,15,70,.18);background:#000F46}
 #frame{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;overflow:hidden;background:#FFFFFF}
 #scene{display:block}
@@ -72,10 +72,6 @@ body{margin:0;height:100%;background:var(--bg);color:var(--text);
 </head>
 <body>
 <div class="app">
-  <div class="top">
-    <h1>Turning Healthcare Data into Insight: sprint overview</h1>
-    <p>Sprint overview reel, 1920 × 1080, 2:42</p>
-  </div>
   <div class="viewport" id="viewport">
     <div class="frameWrap" id="wrap">
       <div id="frame">
@@ -707,7 +703,7 @@ document.addEventListener('keydown',e=>{
 
 /* ---------- fit 1920×1080 frame to the window ---------- */
 const wrap=document.getElementById('wrap'), frame=document.getElementById('frame'), vp=document.getElementById('viewport'), controls=document.getElementById('controls');
-function fit(){const s=Math.min(vp.clientWidth/1920,vp.clientHeight/1080);wrap.style.width=1920*s+'px';wrap.style.height=1080*s+'px';frame.style.transform=`scale(${s})`;controls.style.width=Math.max(300,1920*s)+'px';}
+function fit(){const s=vp.clientWidth/1920;/* fill the width of the page or iframe */wrap.style.width=1920*s+'px';wrap.style.height=1080*s+'px';frame.style.transform=`scale(${s})`;controls.style.width=Math.max(300,1920*s)+'px';}
 new ResizeObserver(fit).observe(vp); fit();
 master.progress(0); tick();
 </script>
