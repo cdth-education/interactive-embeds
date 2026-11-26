@@ -61,12 +61,28 @@ body{margin:0;background:var(--bg);color:var(--text);
 .controls svg{width:18px;height:18px}
 #scrub{flex:1;min-width:80px;accent-color:var(--accent)}
 #time{font-variant-numeric:tabular-nums;font-size:.85rem;color:var(--muted);min-width:86px;text-align:right}
-.chapters{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:1600px}
+.subbar{display:flex;align-items:flex-start;gap:12px;max-width:100%}
+.chapters{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-start;flex:1;min-width:0}
+#txBtn{margin-left:auto;flex:none;display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 14px;border-radius:17px;border:1px solid var(--line);
+  background:var(--surface);color:var(--text);font:inherit;font-weight:600;font-size:.85rem;cursor:pointer}
+#txBtn svg{width:16px;height:16px}
+#txBtn:focus-visible,#txClose:focus-visible,.txl:focus-visible{outline:3px solid #46C8F0;outline-offset:2px}
+#txModal{position:absolute;inset:0;z-index:20;background:rgba(0,11,52,.62);display:flex;align-items:center;justify-content:center;padding:3%}
+#txModal[hidden]{display:none}
+#txPanel{width:100%;max-width:960px;height:100%;background:var(--surface);color:var(--text);border-radius:12px;display:flex;flex-direction:column;
+  box-shadow:0 20px 60px rgba(0,11,52,.4);overflow:hidden}
+#txHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px 10px 20px;border-bottom:1px solid var(--line)}
+#txHead h2{margin:0;font-size:1.05rem;font-weight:700}
+#txClose{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--text);display:grid;place-items:center;cursor:pointer;flex:none}
+#txClose svg{width:16px;height:16px}
+#txList{list-style:none;margin:0;padding:8px 10px 14px;overflow:auto;flex:1}
+.txl{display:flex;gap:12px;width:100%;text-align:left;border:0;border-left:3px solid transparent;background:none;color:var(--text);font:inherit;
+  font-size:.95rem;line-height:1.5;padding:7px 10px;border-radius:6px;cursor:pointer}
+.txl:hover{background:var(--chip)}
+.txl .ts{font-family:"Fira Mono",Menlo,Consolas,monospace;font-size:.8rem;color:var(--muted);padding-top:.15em;min-width:2.8em}
+.txl.now{border-left-color:var(--accent);background:var(--chip)}
 .chip{border:0;background:var(--chip);color:var(--text);border-radius:16px;padding:5px 12px;font:inherit;font-size:.8rem;cursor:pointer}
 .chip.active{background:var(--accent);color:var(--accentText)}
-.script{width:100%;max-width:1100px;font-size:.9rem;color:var(--muted)}
-.script summary{cursor:pointer;color:var(--text);font-weight:600}
-.script ol{max-height:28vh;overflow:auto;margin:8px 0 0;padding-left:1.4em;line-height:1.5}
 @media (max-width:640px){.chapters{display:none}.top p{display:none}}
 </style>
 </head>
@@ -76,11 +92,17 @@ body{margin:0;background:var(--bg);color:var(--text);
     <div class="frameWrap" id="wrap">
       <div id="frame">
         <svg id="scene" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080"></svg>
-        <div id="caption" class="on"><span></span></div>
+        <div id="caption"><span></span></div>
         <button id="bigPlay" aria-label="Play animation">
           <span class="disc"><svg viewBox="0 0 24 24" fill="#000F46"><path d="M6 3l15 9-15 9z"/></svg></span>
           <span class="t">Learning Health Systems</span>
         </button>
+      </div>
+      <div id="txModal" role="dialog" aria-modal="true" aria-labelledby="txTitle" hidden>
+        <div id="txPanel">
+          <div id="txHead"><h2 id="txTitle">Transcript</h2><button id="txClose" aria-label="Close transcript"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+          <ol id="txList"></ol>
+        </div>
       </div>
     </div>
   </div>
@@ -90,10 +112,12 @@ body{margin:0;background:var(--bg);color:var(--text);
     <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Timeline">
     <span id="time">0:00 / 0:00</span>
     <button id="voiceBtn" class="cc" aria-pressed="true" aria-label="Toggle voiceover">Voice</button>
-    <button id="ccBtn" class="cc" aria-pressed="true" aria-label="Toggle voiceover captions">CC</button>
+    <button id="ccBtn" class="cc" aria-pressed="false" aria-label="Toggle voiceover captions">CC</button>
   </div>
-  <div class="chapters" id="chapters"></div>
-  <details class="script"><summary>Voiceover script</summary><ol id="scriptList"></ol></details>
+  <div class="subbar" id="subbar">
+    <div class="chapters" id="chapters"></div>
+    <button id="txBtn" aria-haspopup="dialog" aria-controls="txModal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 6h14M5 11h14M5 16h9"/></svg>Transcript</button>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
@@ -817,6 +841,7 @@ function tick(){
   timeEl.textContent=fmt(t)+' / '+fmt(master.duration());
   let c='';for(const k of CAPS){if(t>=k[0])c=k[1];}
   if(c!==lastCap){lastCap=c;capEl.textContent=c;capEl.classList.toggle('has',!!c);}
+  if(typeof txMark==='function')txMark(t);
   let ci=0;chips.forEach((ch,i)=>{if(t>=+ch.dataset.t)ci=i;});chips.forEach((ch,i)=>ch.classList.toggle('active',i===ci));
 }
 const ICON_PLAY='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 3l15 9-15 9z"/></svg>';
@@ -833,13 +858,31 @@ let wasPlaying=false;
 scrub.addEventListener('pointerdown',()=>{wasPlaying=!master.paused();master.pause();audioSync(false);});
 scrub.addEventListener('input',()=>{bigPlay.hidden=true;master.progress(scrub.value/1000);tick();});
 scrub.addEventListener('change',()=>{if(wasPlaying)setPlaying(true);wasPlaying=false;});
-document.getElementById('scriptList').innerHTML=CAPS.filter(c=>c[1]).map(c=>`<li>${c[1]}</li>`).join('');
+/* transcript modal: covers the animation; each line jumps to that point; the current line is highlighted */
+const txModal=document.getElementById('txModal'), txBtn=document.getElementById('txBtn'), txClose=document.getElementById('txClose'), txList=document.getElementById('txList');
+const TX=CAPS.filter(c=>c[1]);
+txList.innerHTML=TX.map((c,i)=>`<li><button class="txl" data-i="${i}"><span class="ts">${fmt(Math.max(0,c[0]-VO_OFF))}</span><span>${c[1]}</span></button></li>`).join('');
+const txLines=[...txList.querySelectorAll('.txl')]; let txNow=-1;
+function txMark(t){let k=-1;TX.forEach((c,i)=>{if(t>=c[0])k=i;});if(k===txNow)return;txNow=k;
+  txLines.forEach((b,i)=>{b.classList.toggle('now',i===k);if(i===k)b.setAttribute('aria-current','true');else b.removeAttribute('aria-current');});
+  if(!txModal.hidden&&k>=0)txLines[k].scrollIntoView({block:'nearest',behavior:'smooth'});}
+txLines.forEach(b=>b.onclick=()=>{bigPlay.hidden=true;lastCap=null;master.seek(TX[+b.dataset.i][0]+.02);tick();});
+function txOpen(){txModal.hidden=false;txBtn.setAttribute('aria-expanded','true');txNow=-1;txMark(master.time());
+  (txLines[Math.max(0,txNow)]||txClose).scrollIntoView({block:'center'});txClose.focus();}
+function txShut(){txModal.hidden=true;txBtn.setAttribute('aria-expanded','false');txBtn.focus();}
+txBtn.onclick=()=>txModal.hidden?txOpen():txShut(); txClose.onclick=txShut;
+txModal.addEventListener('click',e=>{if(e.target===txModal)txShut();});
+txModal.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();txShut();}
+  if(e.key==='Tab'){const f=[txClose,...txLines],i=f.indexOf(document.activeElement);
+    if(e.shiftKey&&i<=0){e.preventDefault();f[f.length-1].focus();}else if(!e.shiftKey&&i===f.length-1){e.preventDefault();f[0].focus();}}});
+txBtn.setAttribute('aria-expanded','false');
 const voiceBtn=document.getElementById('voiceBtn');
 voiceBtn.onclick=()=>{voOn=!voOn;voiceBtn.setAttribute('aria-pressed',voOn);voTick(master.time());};
 const ccBtn=document.getElementById('ccBtn');
 ccBtn.onclick=()=>{const on=ccBtn.getAttribute('aria-pressed')!=='true';ccBtn.setAttribute('aria-pressed',on);capWrap.classList.toggle('on',on);};
 document.addEventListener('keydown',e=>{
-  if(e.target.tagName==='INPUT')return;
+  if(e.target.tagName==='INPUT'||!txModal.hidden)return;
+  if(e.code==='Space'&&e.target.tagName==='BUTTON')return;
   if(e.code==='Space'){e.preventDefault();bigPlay.hidden=true;setPlaying(master.paused()||master.progress()>=1);}
   if(e.code==='ArrowRight')master.seek(Math.min(master.duration(),master.time()+5));
   if(e.code==='ArrowLeft')master.seek(Math.max(0,master.time()-5));
@@ -847,7 +890,7 @@ document.addEventListener('keydown',e=>{
 
 /* ---------- fit 1920×1080 frame to the window ---------- */
 const wrap=document.getElementById('wrap'), frame=document.getElementById('frame'), vp=document.getElementById('viewport'), controls=document.getElementById('controls');
-function fit(){const s=vp.clientWidth/1920;/* fill the width of the page or iframe */wrap.style.width=1920*s+'px';wrap.style.height=1080*s+'px';frame.style.transform=`scale(${s})`;controls.style.width=Math.max(300,1920*s)+'px';}
+function fit(){const s=vp.clientWidth/1920;/* fill the width of the page or iframe */wrap.style.width=1920*s+'px';wrap.style.height=1080*s+'px';frame.style.transform=`scale(${s})`;controls.style.width=Math.max(300,1920*s)+'px';document.getElementById('subbar').style.width=Math.max(300,1920*s)+'px';}
 new ResizeObserver(fit).observe(vp); fit();
 master.progress(0); tick();
 </script>
