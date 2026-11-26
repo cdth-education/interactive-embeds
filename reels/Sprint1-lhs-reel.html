@@ -39,6 +39,7 @@ body{margin:0;background:var(--bg);color:var(--text);
 #scene text{font-family:"Fira Sans","Helvetica Neue",Arial,sans-serif}
 #scene .mono{font-family:"Fira Mono",Menlo,Consolas,monospace}
 #scene .scene{visibility:hidden}
+#wfg{display:none!important}
 #caption{position:absolute;left:0;right:0;bottom:26px;display:flex;justify-content:center;pointer-events:none}
 #caption span{max-width:1560px;background:rgba(0,11,52,.86);color:#FFFFFF;font-size:28px;line-height:1.3;
   padding:9px 24px;border-radius:12px;text-align:center;opacity:0;transition:opacity .25s}
@@ -861,7 +862,7 @@ scrub.addEventListener('change',()=>{if(wasPlaying)setPlaying(true);wasPlaying=f
 /* transcript modal: covers the animation; each line jumps to that point; the current line is highlighted */
 const txModal=document.getElementById('txModal'), txBtn=document.getElementById('txBtn'), txClose=document.getElementById('txClose'), txList=document.getElementById('txList');
 const TX=CAPS.filter(c=>c[1]);
-txList.innerHTML=TX.map((c,i)=>`<li><button class="txl" data-i="${i}"><span class="ts">${fmt(Math.max(0,c[0]-VO_OFF))}</span><span>${c[1]}</span></button></li>`).join('');
+txList.innerHTML=TX.map((c,i)=>`<li><button class="txl" data-i="${i}"><span class="ts">${fmt(Math.max(0,c[0]-(typeof VO_OFF!=='undefined'?VO_OFF:0)))}</span><span>${c[1]}</span></button></li>`).join('');
 const txLines=[...txList.querySelectorAll('.txl')]; let txNow=-1;
 function txMark(t){let k=-1;TX.forEach((c,i)=>{if(t>=c[0])k=i;});if(k===txNow)return;txNow=k;
   txLines.forEach((b,i)=>{b.classList.toggle('now',i===k);if(i===k)b.setAttribute('aria-current','true');else b.removeAttribute('aria-current');});
